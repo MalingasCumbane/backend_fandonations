@@ -28,4 +28,6 @@ public class UserJpaEntity extends TimeStamp {
 
     @Column(nullable = false)
     private String passwordHash;
+    private boolean active;
+
 }

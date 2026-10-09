@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -29,9 +31,19 @@ public class CreatorPersistenceAdapter implements CreatorPort {
     }
 
     @Override
+    public Optional<Creator> findById(UUID id) {
+        return repository.findById(id).map(mapper::toDomain);
+    }
+
+    @Override
+    public List<Creator> findAll() {
+        return repository.findAll().stream().map(mapper::toDomain).collect(Collectors.toList());
+    }
+
+    @Override
     public Creator save(Creator creator) {
         CreatorJpaEntity entity = mapper.toEntity(creator);
-        
+
         // If it's an update, preserve base fields
         if (creator.getId() != null) {
             CreatorJpaEntity existing = repository.findById(creator.getId()).orElseThrow();
@@ -42,7 +54,7 @@ public class CreatorPersistenceAdapter implements CreatorPort {
             entity.setIsActive(existing.getIsActive());
             entity.setIsDeleted(existing.getIsDeleted());
         }
-        
+
         CreatorJpaEntity saved = repository.save(entity);
         return mapper.toDomain(saved);
     }

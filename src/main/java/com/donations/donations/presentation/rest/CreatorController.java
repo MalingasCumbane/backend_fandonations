@@ -1,7 +1,6 @@
 package com.donations.donations.presentation.rest;
 
-import com.donations.donations.application.usecase.GetCreatorProfileUseCase;
-import com.donations.donations.application.usecase.SaveCreatorProfileUseCase;
+import com.donations.donations.application.usecase.*;
 import com.donations.donations.domain.model.Creator;
 import com.donations.donations.infrastructure.security.UserDetailsImpl;
 import lombok.RequiredArgsConstructor;
@@ -16,9 +15,9 @@ public class CreatorController {
 
     private final GetCreatorProfileUseCase getCreatorProfileUseCase;
     private final SaveCreatorProfileUseCase saveCreatorProfileUseCase;
-    private final com.donations.donations.application.usecase.CheckUsernameUseCase checkUsernameUseCase;
-    private final com.donations.donations.application.usecase.SendPhoneOtpUseCase sendPhoneOtpUseCase;
-    private final com.donations.donations.application.usecase.VerifyPhoneOtpUseCase verifyPhoneOtpUseCase;
+    private final CheckUsernameUseCase checkUsernameUseCase;
+    private final SendPhoneOtpUseCase sendPhoneOtpUseCase;
+    private final VerifyPhoneOtpUseCase verifyPhoneOtpUseCase;
 
     @PostMapping("/me/phone/send-otp")
     public ResponseEntity<?> sendOtp(@RequestBody java.util.Map<String, String> body, @AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -46,21 +45,17 @@ public class CreatorController {
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
-        
-        return getCreatorProfileUseCase.execute(userDetails.getId())
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.noContent().build());
+
+        return getCreatorProfileUseCase.execute(userDetails.getId()).map(ResponseEntity::ok).orElse(ResponseEntity.noContent().build());
     }
 
     @PostMapping("/me")
-    public ResponseEntity<?> saveMyProfile(
-            @AuthenticationPrincipal UserDetailsImpl userDetails,
-            @RequestBody Creator input) {
-            
+    public ResponseEntity<?> saveMyProfile(@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody Creator input) {
+
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
-        
+
         try {
             Creator saved = saveCreatorProfileUseCase.execute(userDetails.getId(), input);
             return ResponseEntity.ok(saved);

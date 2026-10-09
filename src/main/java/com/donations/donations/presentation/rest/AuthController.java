@@ -2,10 +2,9 @@ package com.donations.donations.presentation.rest;
 
 import com.donations.donations.application.dto.LoginCommand;
 import com.donations.donations.application.dto.SignupCommand;
-import com.donations.donations.application.usecase.LoginUseCase;
-import com.donations.donations.application.usecase.LogoutUseCase;
-import com.donations.donations.application.usecase.RegisterUserUseCase;
-import com.donations.donations.application.usecase.VerifyEmailUseCase;
+import com.donations.donations.application.usecase.*;
+import com.donations.donations.domain.model.User;
+import com.donations.donations.infrastructure.security.UserDetailsImpl;
 import com.donations.donations.presentation.rest.dto.MessageResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
@@ -22,20 +21,16 @@ public class AuthController {
     private final VerifyEmailUseCase verifyEmailUseCase;
     private final LoginUseCase loginUseCase;
     private final LogoutUseCase logoutUseCase;
-    private final com.donations.donations.application.usecase.GetCurrentUserUseCase getCurrentUserUseCase;
+    private final GetCurrentUserUseCase getCurrentUserUseCase;
 
     @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@org.springframework.security.core.annotation.AuthenticationPrincipal com.donations.donations.infrastructure.security.UserDetailsImpl userDetails) {
+    public ResponseEntity<?> getCurrentUser(@org.springframework.security.core.annotation.AuthenticationPrincipal UserDetailsImpl userDetails) {
         if (userDetails == null) {
             return ResponseEntity.status(401).build();
         }
         try {
-            com.donations.donations.domain.model.User user = getCurrentUserUseCase.execute(userDetails.getId());
-            return ResponseEntity.ok(java.util.Map.of(
-                    "id", user.getId().toString(),
-                    "email", user.getEmail(),
-                    "role", user.getRole().name()
-            ));
+            User user = getCurrentUserUseCase.execute(userDetails.getId());
+            return ResponseEntity.ok(java.util.Map.of("id", user.getId().toString(), "email", user.getEmail(), "role", user.getRole().name()));
         } catch (Exception e) {
             return ResponseEntity.status(401).build();
         }
@@ -44,9 +39,7 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<MessageResponse> login(@RequestBody LoginCommand command) {
         ResponseCookie jwtCookie = loginUseCase.execute(command);
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, jwtCookie.toString())
-                .body(new MessageResponse("Login successful"));
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, jwtCookie.toString()).body(new MessageResponse("Login successful"));
     }
 
     @PostMapping("/register")
@@ -72,8 +65,6 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<MessageResponse> logout() {
         ResponseCookie cookie = logoutUseCase.execute();
-        return ResponseEntity.ok()
-                .header(HttpHeaders.SET_COOKIE, cookie.toString())
-                .body(new MessageResponse("Logged out successfully!"));
+        return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(new MessageResponse("Logged out successfully!"));
     }
 }

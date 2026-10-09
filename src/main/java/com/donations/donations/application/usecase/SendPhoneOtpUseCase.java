@@ -1,6 +1,8 @@
 package com.donations.donations.application.usecase;
 
 import com.donations.donations.application.port.out.EmailPort;
+import com.donations.donations.domain.model.User;
+import com.donations.donations.domain.repository.UserRepository;
 import com.donations.donations.infrastructure.persistence.entity.PhoneVerificationJpaEntity;
 import com.donations.donations.infrastructure.persistence.repository.PhoneVerificationJpaRepository;
 import lombok.RequiredArgsConstructor;
@@ -17,7 +19,7 @@ public class SendPhoneOtpUseCase {
 
     private final PhoneVerificationJpaRepository repository;
     private final EmailPort emailPort;
-    private final com.donations.donations.domain.repository.UserRepository userRepository;
+    private final UserRepository userRepository;
 
     @Transactional
     public void execute(UUID userId, String phoneNumber) {
@@ -33,7 +35,7 @@ public class SendPhoneOtpUseCase {
                 
         repository.save(entity);
         
-        com.donations.donations.domain.model.User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
         emailPort.sendPhoneOtpEmail(user.getEmail(), otp, phoneNumber);
     }
 }

@@ -24,6 +24,6 @@ public class CategoryJpaEntity extends TimeStamp {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    
+
     private String name;
 }

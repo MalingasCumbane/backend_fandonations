@@ -27,12 +27,12 @@ public class PhoneVerificationJpaEntity extends TimeStamp {
     private UUID id;
 
     private UUID userId;
-    
+
     private String phoneNumber;
-    
+
     private String otpCode;
-    
+
     private LocalDateTime expiresAt;
-    
+
     private boolean verified;
 }

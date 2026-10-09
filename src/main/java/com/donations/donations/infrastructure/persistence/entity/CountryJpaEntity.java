@@ -24,7 +24,7 @@ public class CountryJpaEntity extends TimeStamp {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
-    
+
     private String name;
     private String code;
     private String phoneCode;

@@ -31,13 +31,17 @@ public class CreatorJpaEntity extends TimeStamp {
 
     private String email;
     private String phone;
-    private String country;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "country_id")
+    private CountryJpaEntity country;
     private String city;
-    private String category;
-    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "category_id")
+    private CategoryJpaEntity category;
+
     @Column(columnDefinition = "TEXT")
     private String bio;
-    
+
     private String avatarUrl;
 
     @Enumerated(EnumType.STRING)
@@ -52,7 +56,10 @@ public class CreatorJpaEntity extends TimeStamp {
 
     @Column(columnDefinition = "TEXT")
     private String adminNote;
-    
+
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;
+
+    private String requestedFullName;
+    private java.time.LocalDateTime submittedAt;
 }
