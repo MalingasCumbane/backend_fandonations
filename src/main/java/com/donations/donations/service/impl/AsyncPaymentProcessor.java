@@ -75,7 +75,8 @@ public class AsyncPaymentProcessor {
                         donation.getSupporterEmail(), 
                         creator.getFullName(), 
                         donation.getAmount().toString(), 
-                        donation.getReference()
+                        donation.getReference(),
+                        donation.getMethod() != null ? donation.getMethod().name() : "M-Pesa / e-Mola"
                     );
                 }
             }

@@ -14,4 +14,6 @@ public class EmailEvent implements Serializable {
     private String toEmail;
     private String subject;
     private String body;
+    private byte[] attachmentBytes;
+    private String attachmentFilename;
 }

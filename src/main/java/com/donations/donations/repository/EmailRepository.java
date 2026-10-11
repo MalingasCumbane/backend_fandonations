@@ -5,5 +5,5 @@ public interface EmailRepository {
     void sendWelcomeEmail(String toEmail);
     void sendPhoneOtpEmail(String toEmail, String otp, String phone);
     void sendAccountStatusEmail(String toEmail, String status, String note);
-    void sendDonationReceiptEmail(String toEmail, String creatorName, String amount, String reference);
+    void sendDonationReceiptEmail(String toEmail, String creatorName, String amount, String reference, String method);
 }

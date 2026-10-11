@@ -5,6 +5,7 @@ import com.donations.donations.dto.EmailEvent;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
@@ -21,11 +22,17 @@ public class RabbitMQEmailListener {
 
         try {
             jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
-            org.springframework.mail.javamail.MimeMessageHelper helper = new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
+            org.springframework.mail.javamail.MimeMessageHelper helper = 
+                new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
             
             helper.setTo(event.getToEmail());
             helper.setSubject(event.getSubject());
             helper.setText(event.getBody(), true); // true = isHtml
+            
+            if (event.getAttachmentBytes() != null && event.getAttachmentBytes().length > 0) {
+                String filename = event.getAttachmentFilename() != null ? event.getAttachmentFilename() : "recibo.pdf";
+                helper.addAttachment(filename, new ByteArrayResource(event.getAttachmentBytes()));
+            }
             
             mailSender.send(message);
             
