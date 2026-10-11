@@ -22,6 +22,7 @@ public class VerificationController {
     private final SubmitVerificationUseCase submitVerificationUseCase;
     private final GetCreatorVerificationUseCase getCreatorVerificationUseCase;
     private final CancelVerificationUseCase cancelVerificationUseCase;
+    private final com.donations.donations.service.realtime.RealtimeEventPublisher realtimeEventPublisher;
     private final CreatorRepository creatorRepository;
 
     private UUID getCreatorId(UUID userId) {

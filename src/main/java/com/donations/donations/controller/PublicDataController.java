@@ -32,6 +32,7 @@ public class PublicDataController {
     private final CreatorRepository creatorJpaRepository;
     private final ProcessDonationUseCase processDonationUseCase;
     private final com.donations.donations.repository.CampaignRepository campaignRepository;
+    private final com.donations.donations.repository.PlatformSettingsRepository platformSettingsRepository;
 
 
     // Controllers will be implemented here. For now, returning empty to allow compiling and check.
@@ -99,7 +100,19 @@ public class PublicDataController {
 
     @GetMapping("/settings")
     public Map<String, Object> getSettings() {
-        return Map.of();
+        return platformSettingsRepository.getSettings()
+                .map(s -> Map.<String, Object>of(
+                        "platformFeePercentage", s.getPlatformFeePercentage() != null ? s.getPlatformFeePercentage() : 10,
+                        "minPayoutAmount", s.getMinPayoutAmount() != null ? s.getMinPayoutAmount() : 500,
+                        "registrationsOpen", s.isRegistrationsOpen(),
+                        "payoutsEnabled", s.isPayoutsEnabled()
+                ))
+                .orElseGet(() -> Map.of(
+                        "platformFeePercentage", 10,
+                        "minPayoutAmount", 500,
+                        "registrationsOpen", true,
+                        "payoutsEnabled", true
+                ));
     }
 
 

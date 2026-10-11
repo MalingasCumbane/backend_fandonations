@@ -4,13 +4,19 @@ import com.donations.donations.dto.LoginCommand;
 import com.donations.donations.dto.SignupCommand;
 import com.donations.donations.service.*;
 import com.donations.donations.model.User;
+import com.donations.donations.model.Creator;
 import com.donations.donations.security.UserDetailsImpl;
 import com.donations.donations.dto.MessageResponse;
+import com.donations.donations.repository.CreatorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -22,6 +28,7 @@ public class AuthController {
     private final LoginUseCase loginUseCase;
     private final LogoutUseCase logoutUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
+    private final CreatorRepository creatorRepository;
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@org.springframework.security.core.annotation.AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -30,7 +37,38 @@ public class AuthController {
         }
         try {
             User user = getCurrentUserUseCase.execute(userDetails.getId());
-            return ResponseEntity.ok(java.util.Map.of("id", user.getId().toString(), "email", user.getEmail(), "role", user.getRole().name()));
+            
+            String fullName = null;
+            String username = null;
+            
+            try {
+                Optional<Creator> creatorOpt = creatorRepository.findByUserId(user.getId());
+                if (creatorOpt.isPresent()) {
+                    Creator c = creatorOpt.get();
+                    if (c.getFullName() != null && !c.getFullName().isBlank()) {
+                        fullName = c.getFullName();
+                    }
+                    if (c.getUsername() != null && !c.getUsername().isBlank()) {
+                        username = c.getUsername();
+                    }
+                }
+            } catch (Exception ignored) {}
+
+            String displayName = (fullName != null && !fullName.isBlank()) 
+                    ? fullName 
+                    : ((username != null && !username.isBlank()) ? username : user.getEmail().split("@")[0]);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", user.getId().toString());
+            response.put("email", user.getEmail());
+            response.put("role", user.getRole().name());
+            response.put("name", displayName);
+            response.put("fullName", fullName != null ? fullName : displayName);
+            if (username != null) {
+                response.put("username", username);
+            }
+
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
             return ResponseEntity.status(401).build();
         }

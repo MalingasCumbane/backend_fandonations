@@ -36,7 +36,7 @@ public class AdminController {
     }
 
     @GetMapping("/creators")
-    public ResponseEntity<List<Creator>> getCreators() {
+    public ResponseEntity<List<java.util.Map<String, Object>>> getCreators() {
         return ResponseEntity.ok(getCreatorsUseCase.execute());
     }
 

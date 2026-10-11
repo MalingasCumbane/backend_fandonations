@@ -57,7 +57,6 @@ public class WebhookController {
             Creator creator = creatorRepository.findById(donation.getCreatorId()).orElse(null);
             if (creator != null) {
                 notificationRepository.save(Notification.builder()
-                        .id(UUID.randomUUID())
                         .userId(creator.getUserId())
                         .title("Novo Apoio!")
                         .body("Recebeu uma doação de " + donation.getAmount() + " MT.")

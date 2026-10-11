@@ -10,9 +10,12 @@ import java.time.LocalDateTime;
 @RequiredArgsConstructor
 public class CreateCampaignUseCase {
     private final CampaignRepository campaignRepository;
+    private final com.donations.donations.service.realtime.RealtimeEventPublisher realtimeEventPublisher;
 
     public Campaign execute(Campaign campaign) {
         campaign.setStartDate(java.time.LocalDate.now());
-        return campaignRepository.save(campaign);
+        Campaign saved = campaignRepository.save(campaign);
+        try { realtimeEventPublisher.notifyCreatorCampaign(saved.getCreatorId(), saved); } catch (Exception ignored) {}
+        return saved;
     }
 }

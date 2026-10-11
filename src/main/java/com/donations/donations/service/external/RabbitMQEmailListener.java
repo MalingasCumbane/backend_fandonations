@@ -25,6 +25,7 @@ public class RabbitMQEmailListener {
             org.springframework.mail.javamail.MimeMessageHelper helper = 
                 new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
             
+            helper.setFrom("malingascumbane1@gmail.com", "APOIA Moçambique");
             helper.setTo(event.getToEmail());
             helper.setSubject(event.getSubject());
             helper.setText(event.getBody(), true); // true = isHtml

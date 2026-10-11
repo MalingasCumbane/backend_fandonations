@@ -23,6 +23,7 @@ public class ReviewCreatorUseCase {
     private final NotificationRepository notificationRepository;
         private final VerificationRequestRepository verificationRequestRepository;
     private final UserRepository userRepository;
+    private final com.donations.donations.service.realtime.RealtimeEventPublisher realtimeEventPublisher;
     private final EmailRepository emailRepository;
 
     public Creator execute(UUID id, CreatorStatus status, String adminNote) {
@@ -35,6 +36,10 @@ public class ReviewCreatorUseCase {
             creator.setRejectionReason(adminNote);
         }
         creator = creatorRepository.save(creator);
+        try {
+            realtimeEventPublisher.notifyCreatorDonation(creator.getId(), java.util.Map.of("type", "VERIFICATION_STATUS_CHANGED", "status", status.name()));
+            realtimeEventPublisher.notifyPublicCreator(creator.getUsername(), java.util.Map.of("type", "CREATOR_STATUS_CHANGED", "status", status.name()));
+        } catch (Exception ignored) {}
 
         // Update VerificationRequest if pending
         verificationRequestRepository.findFirstByCreatorIdOrderByCreatedAtDesc(creator.getId()).ifPresent(req -> {
@@ -54,7 +59,6 @@ public class ReviewCreatorUseCase {
 
         // Notify
         notificationRepository.save(Notification.builder()
-                .id(UUID.randomUUID())
                 .userId(creator.getUserId())
                 .title("Atualização de Conta")
                 .body("O estado da sua conta foi actualizado para " + status.name())

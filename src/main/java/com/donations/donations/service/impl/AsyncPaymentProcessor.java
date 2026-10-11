@@ -11,6 +11,8 @@ import com.donations.donations.model.Donation;
 import com.donations.donations.model.Notification;
 import com.donations.donations.model.enums.CampaignStatus;
 import com.donations.donations.repository.EmailRepository;
+import com.donations.donations.service.realtime.RealtimeEventPublisher;
+import com.donations.donations.service.creator.GetCreatorStatsUseCase;
 import com.donations.donations.model.enums.DonationStatus;
 import com.donations.donations.model.payment.PaymentRequest;
 import com.donations.donations.model.payment.PaymentResult;
@@ -30,6 +32,8 @@ public class AsyncPaymentProcessor {
     private final NotificationRepository notificationRepository;
     private final CreatorRepository creatorRepository;
     private final EmailRepository emailRepository;
+    private final RealtimeEventPublisher realtimeEventPublisher;
+    private final GetCreatorStatsUseCase getCreatorStatsUseCase;
 
     @Transactional
     public void processPayment(Donation donation, String phone) {
@@ -78,6 +82,27 @@ public class AsyncPaymentProcessor {
                         donation.getReference(),
                         donation.getMethod() != null ? donation.getMethod().name() : "M-Pesa / e-Mola"
                     );
+                }
+
+                // Disparo de Eventos WebSocket em Tempo Real
+                try {
+                    // 1. Notificar canal público do criador para atualizar metas e doações ao vivo
+                    realtimeEventPublisher.notifyPublicCreator(creator.getUsername(), java.util.Map.of(
+                        "type", "NEW_DONATION",
+                        "amount", donation.getAmount(),
+                        "campaignId", donation.getCampaignId() != null ? donation.getCampaignId().toString() : null
+                    ));
+
+                    // 2. Notificar canal privado do criador (Dashboard)
+                    realtimeEventPublisher.notifyCreatorDonation(creator.getId(), donation);
+
+                    // 3. Atualizar estatísticas do criador em tempo real
+                    realtimeEventPublisher.notifyCreatorStats(creator.getId(), getCreatorStatsUseCase.execute(creator.getId()));
+
+                    // 4. Notificar painel administrativo sobre a transação em tempo real
+                    realtimeEventPublisher.notifyAdminTransactions(donation);
+                } catch (Exception wsEx) {
+                    log.error("Erro ao publicar evento WebSocket de doação: {}", wsEx.getMessage());
                 }
             }
         } else {

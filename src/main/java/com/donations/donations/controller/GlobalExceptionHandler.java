@@ -33,10 +33,18 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.FORBIDDEN);
     }
 
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    public ResponseEntity<Map<String, String>> handleResponseStatusException(org.springframework.web.server.ResponseStatusException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", ex.getReason() != null ? ex.getReason() : ex.getMessage());
+        return new ResponseEntity<>(response, ex.getStatusCode());
+    }
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
+        ex.printStackTrace();
         Map<String, String> response = new HashMap<>();
-        response.put("message", "Erro interno no servidor.");
+        response.put("message", ex.getMessage() != null ? ex.getMessage() : "Erro interno no servidor.");
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

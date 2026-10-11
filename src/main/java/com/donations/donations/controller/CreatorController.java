@@ -16,20 +16,6 @@ public class CreatorController {
     private final GetCreatorProfileUseCase getCreatorProfileUseCase;
     private final SaveCreatorProfileUseCase saveCreatorProfileUseCase;
     private final CheckUsernameUseCase checkUsernameUseCase;
-    private final SendPhoneOtpUseCase sendPhoneOtpUseCase;
-    private final VerifyPhoneOtpUseCase verifyPhoneOtpUseCase;
-
-    @PostMapping("/me/phone/send-otp")
-    public ResponseEntity<?> sendOtp(@RequestBody java.util.Map<String, String> body, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        sendPhoneOtpUseCase.execute(userDetails.getId(), body.get("phoneNumber"));
-        return ResponseEntity.ok(java.util.Map.of("message", "OTP sent"));
-    }
-
-    @PostMapping("/me/phone/verify-otp")
-    public ResponseEntity<?> verifyOtp(@RequestBody java.util.Map<String, String> body, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        verifyPhoneOtpUseCase.execute(userDetails.getId(), body.get("phoneNumber"), body.get("otp"));
-        return ResponseEntity.ok(java.util.Map.of("message", "Phone verified"));
-    }
 
     @GetMapping("/check-username")
     public ResponseEntity<?> checkUsername(@RequestParam String username, @AuthenticationPrincipal UserDetailsImpl userDetails) {

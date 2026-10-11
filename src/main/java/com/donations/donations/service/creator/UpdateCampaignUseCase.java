@@ -10,6 +10,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class UpdateCampaignUseCase {
     private final CampaignRepository campaignRepository;
+    private final com.donations.donations.service.realtime.RealtimeEventPublisher realtimeEventPublisher;
 
     public Campaign execute(UUID campaignId, Campaign updated, UUID creatorId) {
         return campaignRepository.findById(campaignId)
@@ -23,7 +24,9 @@ public class UpdateCampaignUseCase {
                 if (updated.getStartDate() != null) existing.setStartDate(updated.getStartDate());
                 if (updated.getEndDate() != null) existing.setEndDate(updated.getEndDate());
                 if (updated.getStatus() != null) existing.setStatus(updated.getStatus());
-                return campaignRepository.save(existing);
+                Campaign saved = campaignRepository.save(existing);
+                try { realtimeEventPublisher.notifyCreatorCampaign(saved.getCreatorId(), saved); } catch (Exception ignored) {}
+                return saved;
             })
             .orElseThrow(() -> new IllegalArgumentException("Campaign not found"));
     }
