@@ -98,40 +98,48 @@ public class ReviewPayoutUseCase {
         // Envio de email com resultado da operação para o Criador
         try {
             if (creator != null) {
-                String creatorEmail = (creator.getEmail() != null && !creator.getEmail().isBlank())
-                        ? creator.getEmail()
-                        : (creator.getUserId() != null 
-                                ? userRepository.findById(creator.getUserId()).map(com.donations.donations.model.User::getEmail).orElse(null) 
-                                : null);
+                java.util.Set<String> recipientCreatorEmails = new java.util.LinkedHashSet<>();
+                if (creator.getEmail() != null && !creator.getEmail().isBlank()) {
+                    recipientCreatorEmails.add(creator.getEmail().trim());
+                }
+                if (creator.getUserId() != null) {
+                    userRepository.findById(creator.getUserId()).ifPresent(u -> {
+                        if (u.getEmail() != null && !u.getEmail().isBlank()) {
+                            recipientCreatorEmails.add(u.getEmail().trim());
+                        }
+                    });
+                }
 
-                if (creatorEmail != null && !creatorEmail.isBlank()) {
+                if (!recipientCreatorEmails.isEmpty()) {
                     String dateFormatted = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
                     String amountStr = String.format("%,.2f", finalPayout.getAmount());
                     String methodStr = finalPayout.getMethod() != null ? finalPayout.getMethod().name() : "M-Pesa/e-Mola";
                     String phoneStr = finalPayout.getPhone() != null ? finalPayout.getPhone() : (creator.getPhone() != null ? creator.getPhone() : "N/D");
 
-                    if (status == PayoutStatus.PAID) {
-                        System.out.println("[Email] Enfileirando email de levantamento pago (PAID) para criador: " + creatorEmail);
-                        emailRepository.sendPayoutApprovedEmail(
-                                creatorEmail,
-                                creator.getFullName() != null ? creator.getFullName() : creator.getUsername(),
-                                amountStr,
-                                methodStr,
-                                phoneStr,
-                                finalPayout.getTransactionReference(),
-                                finalPayout.getAdminNote(),
-                                dateFormatted
-                        );
-                    } else if (status == PayoutStatus.CANCELLED) {
-                        System.out.println("[Email] Enfileirando email de levantamento cancelado (CANCELLED) para criador: " + creatorEmail);
-                        emailRepository.sendPayoutRejectedEmail(
-                                creatorEmail,
-                                creator.getFullName() != null ? creator.getFullName() : creator.getUsername(),
-                                amountStr,
-                                methodStr,
-                                finalPayout.getAdminNote(),
-                                dateFormatted
-                        );
+                    for (String creatorEmail : recipientCreatorEmails) {
+                        if (status == PayoutStatus.PAID) {
+                            System.out.println("[Email] A enviar email de levantamento pago (PAID) para criador: " + creatorEmail);
+                            emailRepository.sendPayoutApprovedEmail(
+                                    creatorEmail,
+                                    creator.getFullName() != null ? creator.getFullName() : creator.getUsername(),
+                                    amountStr,
+                                    methodStr,
+                                    phoneStr,
+                                    finalPayout.getTransactionReference(),
+                                    finalPayout.getAdminNote(),
+                                    dateFormatted
+                            );
+                        } else if (status == PayoutStatus.CANCELLED || status == PayoutStatus.FAILED) {
+                            System.out.println("[Email] A enviar email de levantamento cancelado/rejeitado para criador: " + creatorEmail);
+                            emailRepository.sendPayoutRejectedEmail(
+                                    creatorEmail,
+                                    creator.getFullName() != null ? creator.getFullName() : creator.getUsername(),
+                                    amountStr,
+                                    methodStr,
+                                    finalPayout.getAdminNote(),
+                                    dateFormatted
+                            );
+                        }
                     }
                 } else {
                     System.out.println("[Email] Aviso: email do criador não encontrado para notificação de revisão de levantamento (creatorId=" + finalPayout.getCreatorId() + ").");

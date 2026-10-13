@@ -121,27 +121,59 @@ public class RequestPayoutUseCase {
 
         try { realtimeEventPublisher.notifyAdminPayouts(saved); } catch (Exception ignored) {}
 
-        // Enviar email de notificação detalhado ao SUPER_ADMIN e email de confirmação ao Criador
+        // Enviar email de notificação a todos os administradores da plataforma e ao Criador
         try {
             String dateFormatted = LocalDateTime.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
             String amountStr = String.format("%,.2f", amount);
             String feeStr = String.format("%,.2f", feeAmount);
             String totalDeductedStr = String.format("%,.2f", totalRequired);
 
-            String creatorEmail = (creator.getEmail() != null && !creator.getEmail().isBlank())
-                    ? creator.getEmail()
-                    : (creator.getUserId() != null 
-                            ? userRepository.findById(creator.getUserId()).map(com.donations.donations.model.User::getEmail).orElse(null) 
-                            : null);
+            // Obter todos os emails associados ao criador
+            java.util.Set<String> recipientCreatorEmails = new java.util.LinkedHashSet<>();
+            if (creator.getEmail() != null && !creator.getEmail().isBlank()) {
+                recipientCreatorEmails.add(creator.getEmail().trim());
+            }
+            if (creator.getUserId() != null) {
+                userRepository.findById(creator.getUserId()).ifPresent(u -> {
+                    if (u.getEmail() != null && !u.getEmail().isBlank()) {
+                        recipientCreatorEmails.add(u.getEmail().trim());
+                    }
+                });
+            }
 
-            // 1. Email para o Administrador com detalhes do criador e pedido
+            String primaryCreatorEmail = recipientCreatorEmails.isEmpty() ? "N/D" : recipientCreatorEmails.iterator().next();
+
+            // 1. Coletar todos os administradores da plataforma
+            java.util.Set<String> recipientAdminEmails = new java.util.LinkedHashSet<>();
             if (adminEmail != null && !adminEmail.isBlank()) {
-                System.out.println("[Email] Enfileirando email de pedido de levantamento para o admin: " + adminEmail);
+                recipientAdminEmails.add(adminEmail.trim());
+            }
+
+            try {
+                List<com.donations.donations.model.User> adminUsers = userRepository.findByRoleIn(
+                        List.of(
+                                com.donations.donations.model.UserRole.SUPER_ADMIN,
+                                com.donations.donations.model.UserRole.ADMIN,
+                                com.donations.donations.model.UserRole.FINANCE
+                        )
+                );
+                for (com.donations.donations.model.User u : adminUsers) {
+                    if (u.getEmail() != null && !u.getEmail().isBlank()) {
+                        recipientAdminEmails.add(u.getEmail().trim());
+                    }
+                }
+            } catch (Exception e) {
+                System.err.println("Erro ao buscar administradores: " + e.getMessage());
+            }
+
+            // Enviar email para cada administrador
+            for (String targetAdmin : recipientAdminEmails) {
+                System.out.println("[Email] A enviar notificação de pedido de levantamento para admin: " + targetAdmin);
                 emailRepository.sendPayoutRequestedAdminEmail(
-                        adminEmail,
+                        targetAdmin,
                         creator.getFullName() != null ? creator.getFullName() : creator.getUsername(),
                         creator.getUsername(),
-                        creatorEmail != null ? creatorEmail : "N/D",
+                        primaryCreatorEmail,
                         amountStr,
                         feeStr,
                         totalDeductedStr,
@@ -149,28 +181,28 @@ public class RequestPayoutUseCase {
                         phone,
                         dateFormatted
                 );
-            } else {
-                System.out.println("[Email] Aviso: adminEmail não configurado.");
             }
 
             // 2. Email para o Criador confirmando o pedido e avisando do prazo de até 3 dias
-            if (creatorEmail != null && !creatorEmail.isBlank()) {
-                System.out.println("[Email] Enfileirando email de confirmação de levantamento para o criador: " + creatorEmail);
-                emailRepository.sendPayoutRequestedCreatorEmail(
-                        creatorEmail,
-                        creator.getFullName() != null ? creator.getFullName() : creator.getUsername(),
-                        amountStr,
-                        method.name(),
-                        phone,
-                        feeStr,
-                        totalDeductedStr,
-                        dateFormatted
-                );
-            } else {
+            if (recipientCreatorEmails.isEmpty()) {
                 System.out.println("[Email] Aviso: email do criador não encontrado (creatorId=" + creatorId + ").");
+            } else {
+                for (String targetCreator : recipientCreatorEmails) {
+                    System.out.println("[Email] A enviar confirmação de levantamento para criador: " + targetCreator);
+                    emailRepository.sendPayoutRequestedCreatorEmail(
+                            targetCreator,
+                            creator.getFullName() != null ? creator.getFullName() : creator.getUsername(),
+                            amountStr,
+                            method.name(),
+                            phone,
+                            feeStr,
+                            totalDeductedStr,
+                            dateFormatted
+                    );
+                }
             }
         } catch (Exception e) {
-            System.err.println("Erro ao enfileirar emails de levantamento: " + e.getMessage());
+            System.err.println("Erro ao processar emails de levantamento: " + e.getMessage());
             e.printStackTrace();
         }
 

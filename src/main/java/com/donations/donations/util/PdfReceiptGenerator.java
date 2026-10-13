@@ -56,7 +56,7 @@ public class PdfReceiptGenerator {
             write(stream, "BT\n");
             write(stream, "/F2 26 Tf\n");
             write(stream, "1 1 1 rg\n"); // White
-            write(stream, "50 782 Td (APOIA) Tj\n");
+            write(stream, "50 782 Td (TXOPA) Tj\n");
             write(stream, "/F1 9 Tf\n");
             write(stream, "0.7 0.75 0.8 rg\n");
             write(stream, "50 766 Td (Plataforma Oficial de Doacoes e Apoio a Criadores) Tj\n");
@@ -147,7 +147,7 @@ public class PdfReceiptGenerator {
             write(stream, "65 382 Td (COMPROVATIVO DE EMISSAO DIGITAL) Tj\n");
             write(stream, "/F1 9 Tf\n");
             write(stream, "0.45 0.50 0.55 rg\n");
-            write(stream, "65 366 Td (Este documento constitui o comprovativo electronico de doacao processado atraves do APOIA.) Tj\n");
+            write(stream, "65 366 Td (Este documento constitui o comprovativo electronico de doacao processado atraves do Txopa.) Tj\n");
             write(stream, "65 352 Td (Os fundos foram creditados na conta do criador em conformidade com os termos da plataforma.) Tj\n");
             write(stream, "ET\n");
 
@@ -158,10 +158,10 @@ public class PdfReceiptGenerator {
             write(stream, "BT\n");
             write(stream, "/F2 9 Tf\n");
             write(stream, "0.3 0.35 0.4 rg\n");
-            write(stream, "50 92 Td (APOIA - Apoio a Criadores de Mocambique) Tj\n");
+            write(stream, "50 92 Td (Txopa - Apoio a Criadores de Mocambique) Tj\n");
             write(stream, "/F1 8 Tf\n");
             write(stream, "0.55 0.6 0.65 rg\n");
-            write(stream, "50 78 Td (Website: https://apoia.co.mz  |  Suporte: suporte@apoia.co.mz  |  Maputo, Mocambique) Tj\n");
+            write(stream, "50 78 Td (Website: https://txopa.app  |  Suporte: suporte@txopa.app  |  Maputo, Mocambique) Tj\n");
             write(stream, "50 65 Td (Obrigado por fortalecer a comunidade de criadores independentes em Mocambique!) Tj\n");
             write(stream, "ET\n");
 

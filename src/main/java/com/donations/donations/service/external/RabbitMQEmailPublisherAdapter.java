@@ -5,6 +5,7 @@ import com.donations.donations.config.RabbitMQConfig;
 import com.donations.donations.dto.EmailEvent;
 import lombok.RequiredArgsConstructor;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -12,10 +13,32 @@ import org.springframework.stereotype.Service;
 public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
     private final RabbitTemplate rabbitTemplate;
+    private final EmailDeliveryService emailDeliveryService;
+
+    @Value("${app.frontend.url:https://txopa.app}")
+    private String frontendUrl;
+
+    private void dispatch(EmailEvent event) {
+        if (event == null || event.getToEmail() == null || event.getToEmail().isBlank()) {
+            return;
+        }
+
+        boolean queued = false;
+        try {
+            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
+            queued = true;
+        } catch (Exception e) {
+            System.err.println("[RabbitMQ] Indisponível (" + e.getMessage() + "). A despachar email assincronamente via SMTP para " + event.getToEmail());
+        }
+
+        if (!queued) {
+            emailDeliveryService.sendEmailAsync(event);
+        }
+    }
 
     @Override
     public void sendVerificationEmail(String toEmail, String token) {
-        String verificationUrl = "http://localhost:8080/verificar-token?token=" + token;
+        String verificationUrl = frontendUrl + "/verificar-token?token=" + token;
 
         String htmlBody = """
                 <!DOCTYPE html>
@@ -45,12 +68,12 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 <body>
                     <div class="wrapper">
                         <div class="logo">
-                            <h1>APOI<span>A</span></h1>
+                            <h1>TXOP<span>A</span></h1>
                         </div>
                         <div class="card">
                             <div class="icon">✉️</div>
                             <h2 class="title">Verifique o seu email</h2>
-                            <p class="text">Bem-vindo(a) ao APOIA! Para garantir a segurança da sua conta e começar a receber donativos, precisamos que confirme o seu endereço de email.</p>
+                            <p class="text">Bem-vindo(a) ao Txopa! Para garantir a segurança da sua conta e começar a receber donativos, precisamos que confirme o seu endereço de email.</p>
                             <a href="%s" class="btn">Confirmar o meu email</a>
                 
                             <div class="divider"></div>
@@ -59,7 +82,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             <a href="%s" class="raw-link">%s</a></p>
                         </div>
                         <div class="footer">
-                            &copy; 2026 APOIA Inc. &bull; Maputo, Moçambique<br>
+                            &copy; 2026 Txopa Inc. &bull; Maputo, Moçambique<br>
                             Não criou nenhuma conta? Pode apagar este email.
                         </div>
                     </div>
@@ -69,15 +92,11 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(toEmail)
-                .subject("Ative a sua conta no APOIA")
+                .subject("Ative a sua conta no Txopa")
                 .body(htmlBody)
                 .build();
 
-        try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-        } catch (Exception e) {
-            System.err.println("Failed to send email to RabbitMQ: " + e.getMessage());
-        }
+        dispatch(event);
     }
 
     @Override
@@ -110,7 +129,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 <body>
                     <div class="wrapper">
                         <div class="logo">
-                            <h1>APOI<span>A</span></h1>
+                            <h1>TXOP<span>A</span></h1>
                         </div>
                         <div class="card">
                             <span class="icon-success">🚀</span>
@@ -126,10 +145,10 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                                 </ul>
                             </div>
                 
-                            <a href="http://localhost:8080/dashboard" class="btn">Aceder ao Dashboard</a>
+                            <a href="https://txopa.app/dashboard" class="btn">Aceder ao Dashboard</a>
                         </div>
                         <div class="footer">
-                            &copy; 2026 APOIA Inc. &bull; Maputo, Moçambique
+                            &copy; 2026 Txopa Inc. &bull; Maputo, Moçambique
                         </div>
                     </div>
                 </body>
@@ -138,15 +157,11 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(toEmail)
-                .subject("Bem-vindo(a) ao APOIA! \uD83C\uDF89")
+                .subject("Bem-vindo(a) ao Txopa! \uD83C\uDF89")
                 .body(htmlBody)
                 .build();
 
-        try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-        } catch (Exception e) {
-            System.err.println("Failed to send email to RabbitMQ: " + e.getMessage());
-        }
+        dispatch(event);
     }
 
     @Override
@@ -174,7 +189,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 <body>
                     <div class="wrapper">
                         <div class="logo">
-                            <h1>APOI<span>A</span></h1>
+                            <h1>TXOP<span>A</span></h1>
                         </div>
                         <div class="card">
                             <h2 class="title">Verificação de Número</h2>
@@ -183,7 +198,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             <p class="text" style="font-size: 13px; margin-bottom: 0;">Este código expira em 10 minutos. Não partilhe este código com ninguém.</p>
                         </div>
                         <div class="footer">
-                            &copy; 2026 APOIA Inc. &bull; Maputo, Moçambique
+                            &copy; 2026 Txopa Inc. &bull; Maputo, Moçambique
                         </div>
                     </div>
                 </body>
@@ -197,11 +212,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 .body(htmlBody)
                 .build();
 
-        try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-        } catch (Exception e) {
-            System.err.println("Failed to send email to RabbitMQ: " + e.getMessage());
-        }
+        dispatch(event);
     }
 
     @Override
@@ -229,15 +240,11 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(toEmail)
-                .subject("Atualização do Estado da Conta - APOIA")
+                .subject("Atualização do Estado da Conta - Txopa")
                 .body(htmlBody)
                 .build();
 
-        try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-        } catch (Exception e) {
-            System.err.println("Failed to send email to RabbitMQ: " + e.getMessage());
-        }
+        dispatch(event);
     }
 
     @Override
@@ -274,7 +281,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
         <body>
             <div class="card">
                 <div class="header">
-                    <h1>APOIA</h1>
+                    <h1>Txopa</h1>
                     <p>Plataforma Oficial de Apoio a Criadores de Mocambique</p>
                 </div>
                 <div class="content">
@@ -308,7 +315,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                     </div>
                 </div>
                 <div class="footer">
-                    APOIA Mocambique - Suporte: suporte@apoia.co.mz<br/>
+                    Txopa Mocambique - Suporte: suporte@txopa.app<br/>
                     Maputo, Mocambique
                 </div>
             </div>
@@ -318,17 +325,13 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(toEmail)
-                .subject("Comprovativo de Doacao - APOIA (Ref: " + reference + ")")
+                .subject("Comprovativo de Doacao - Txopa (Ref: " + reference + ")")
                 .body(htmlBody)
                 .attachmentBytes(pdfReceipt)
                 .attachmentFilename("Recibo-" + reference + ".pdf")
                 .build();
 
-        try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-        } catch (Exception e) {
-            System.err.println("Failed to send email to RabbitMQ: " + e.getMessage());
-        }
+        dispatch(event);
     }
 
     @Override
@@ -351,7 +354,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                         .title { font-size: 20px; font-weight: 700; margin: 0 0 8px; color: #111827; }
                         .desc { font-size: 14px; color: #4b5563; line-height: 1.5; margin-bottom: 24px; }
                         .table-box { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px 20px; margin-bottom: 24px; }
-                        table { width: 100%; border-collapse: collapse; }
+                        table { width: 100%%; border-collapse: collapse; }
                         td { padding: 8px 0; font-size: 14px; }
                         .label { color: #6b7280; }
                         .val { text-align: right; font-weight: 600; color: #111827; }
@@ -362,7 +365,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 <body>
                     <div class="wrapper">
                         <div class="logo">
-                            <h1>APOI<span>A</span></h1>
+                            <h1>TXOP<span>A</span></h1>
                         </div>
                         <div class="card">
                             <span class="header-badge">NOVO PEDIDO DE LEVANTAMENTO</span>
@@ -411,7 +414,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             </p>
                         </div>
                         <div class="footer">
-                            Painel Administrativo APOIA - Gestão Financeira<br/>
+                            Painel Administrativo Txopa - Gestão Financeira<br/>
                             Maputo, Moçambique
                         </div>
                     </div>
@@ -425,14 +428,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 .body(htmlBody)
                 .build();
 
-        try {
-            System.out.println("[RabbitMQ] Publicando email para " + adminEmail + " na exchange " + RabbitMQConfig.EMAIL_EXCHANGE);
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-            System.out.println("[RabbitMQ] Email publicado com sucesso para " + adminEmail);
-        } catch (Exception e) {
-            System.err.println("Failed to send admin payout email to RabbitMQ: " + e.getMessage());
-            e.printStackTrace();
-        }
+        dispatch(event);
     }
 
     @Override
@@ -455,7 +451,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                         .title { font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 8px; color: #111827; }
                         .desc { font-size: 14px; text-align: center; color: #4b5563; line-height: 1.6; margin-bottom: 24px; }
                         .table-box { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
-                        table { width: 100%; border-collapse: collapse; }
+                        table { width: 100%%; border-collapse: collapse; }
                         td { padding: 8px 0; font-size: 14px; }
                         .label { color: #6b7280; }
                         .val { text-align: right; font-weight: 600; color: #111827; }
@@ -469,7 +465,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 <body>
                     <div class="wrapper">
                         <div class="logo">
-                            <h1>APOI<span>A</span></h1>
+                            <h1>TXOP<span>A</span></h1>
                         </div>
                         <div class="card">
                             <div class="icon-circle">✓</div>
@@ -513,11 +509,11 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             </div>
 
                             <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">
-                                Se tiver alguma dúvida, responda a este email ou contacte o nosso suporte em suporte@apoia.co.mz.
+                                Se tiver alguma dúvida, responda a este email ou contacte o nosso suporte em suporte@txopa.app.
                             </p>
                         </div>
                         <div class="footer">
-                            APOIA Moçambique - Apoie quem você admira<br/>
+                            Txopa Moçambique - Apoie quem você admira<br/>
                             Maputo, Moçambique
                         </div>
                     </div>
@@ -527,18 +523,11 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(creatorEmail)
-                .subject("Confirmação de Pedido de Levantamento - APOIA (" + amount + " MT)")
+                .subject("Confirmação de Pedido de Levantamento - Txopa (" + amount + " MT)")
                 .body(htmlBody)
                 .build();
 
-        try {
-            System.out.println("[RabbitMQ] Publicando email para o criador " + creatorEmail + " na exchange " + RabbitMQConfig.EMAIL_EXCHANGE);
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-            System.out.println("[RabbitMQ] Email publicado com sucesso para o criador " + creatorEmail);
-        } catch (Exception e) {
-            System.err.println("Failed to send creator payout email to RabbitMQ: " + e.getMessage());
-            e.printStackTrace();
-        }
+        dispatch(event);
     }
 
     @Override
@@ -561,7 +550,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                         .title { font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 8px; color: #111827; }
                         .desc { font-size: 14px; text-align: center; color: #4b5563; line-height: 1.6; margin-bottom: 24px; }
                         .table-box { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
-                        table { width: 100%; border-collapse: collapse; }
+                        table { width: 100%%; border-collapse: collapse; }
                         td { padding: 8px 0; font-size: 14px; }
                         .label { color: #6b7280; }
                         .val { text-align: right; font-weight: 600; color: #111827; }
@@ -573,7 +562,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 <body>
                     <div class="wrapper">
                         <div class="logo">
-                            <h1>APOI<span>A</span></h1>
+                            <h1>TXOP<span>A</span></h1>
                         </div>
                         <div class="card">
                             <div class="icon-circle">💰</div>
@@ -608,11 +597,11 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             %s
 
                             <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">
-                                Obrigado por fazer parte da comunidade APOIA. Continue a inspirar os seus apoiadores!
+                                Obrigado por fazer parte da comunidade Txopa. Continue a inspirar os seus apoiadores!
                             </p>
                         </div>
                         <div class="footer">
-                            APOIA Moçambique - Apoie quem você admira<br/>
+                            Txopa Moçambique - Apoie quem você admira<br/>
                             Maputo, Moçambique
                         </div>
                     </div>
@@ -630,15 +619,11 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(creatorEmail)
-                .subject("Levantamento Concluído - APOIA (" + amount + " MT)")
+                .subject("Levantamento Concluído - Txopa (" + amount + " MT)")
                 .body(htmlBody)
                 .build();
 
-        try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-        } catch (Exception e) {
-            System.err.println("Failed to send payout approved email to RabbitMQ: " + e.getMessage());
-        }
+        dispatch(event);
     }
 
     @Override
@@ -661,7 +646,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                         .title { font-size: 22px; font-weight: 700; text-align: center; margin: 0 0 8px; color: #111827; }
                         .desc { font-size: 14px; text-align: center; color: #4b5563; line-height: 1.6; margin-bottom: 24px; }
                         .table-box { background-color: #f9fafb; border: 1px solid #e5e7eb; border-radius: 12px; padding: 18px 20px; margin-bottom: 20px; }
-                        table { width: 100%; border-collapse: collapse; }
+                        table { width: 100%%; border-collapse: collapse; }
                         td { padding: 8px 0; font-size: 14px; }
                         .label { color: #6b7280; }
                         .val { text-align: right; font-weight: 600; color: #111827; }
@@ -672,7 +657,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 <body>
                     <div class="wrapper">
                         <div class="logo">
-                            <h1>APOI<span>A</span></h1>
+                            <h1>TXOP<span>A</span></h1>
                         </div>
                         <div class="card">
                             <div class="icon-circle">✕</div>
@@ -710,7 +695,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             </p>
                         </div>
                         <div class="footer">
-                            APOIA Moçambique - Suporte: suporte@apoia.co.mz<br/>
+                            Txopa Moçambique - Suporte: suporte@txopa.app<br/>
                             Maputo, Moçambique
                         </div>
                     </div>
@@ -726,14 +711,10 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(creatorEmail)
-                .subject("Atualização do Pedido de Levantamento - APOIA (" + amount + " MT)")
+                .subject("Atualização do Pedido de Levantamento - Txopa (" + amount + " MT)")
                 .body(htmlBody)
                 .build();
 
-        try {
-            rabbitTemplate.convertAndSend(RabbitMQConfig.EMAIL_EXCHANGE, RabbitMQConfig.EMAIL_ROUTING_KEY, event);
-        } catch (Exception e) {
-            System.err.println("Failed to send payout rejected email to RabbitMQ: " + e.getMessage());
-        }
+        dispatch(event);
     }
 }

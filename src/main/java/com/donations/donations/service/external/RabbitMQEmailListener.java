@@ -14,33 +14,11 @@ import org.springframework.stereotype.Component;
 @RequiredArgsConstructor
 public class RabbitMQEmailListener {
 
-    private final JavaMailSender mailSender;
+    private final EmailDeliveryService emailDeliveryService;
 
     @RabbitListener(queues = RabbitMQConfig.EMAIL_QUEUE)
     public void handleEmailEvent(EmailEvent event) {
-        log.info("Received request to send email to {}", event.getToEmail());
-
-        try {
-            jakarta.mail.internet.MimeMessage message = mailSender.createMimeMessage();
-            org.springframework.mail.javamail.MimeMessageHelper helper = 
-                new org.springframework.mail.javamail.MimeMessageHelper(message, true, "UTF-8");
-            
-            helper.setFrom("malingascumbane1@gmail.com", "APOIA Moçambique");
-            helper.setTo(event.getToEmail());
-            helper.setSubject(event.getSubject());
-            helper.setText(event.getBody(), true); // true = isHtml
-            
-            if (event.getAttachmentBytes() != null && event.getAttachmentBytes().length > 0) {
-                String filename = event.getAttachmentFilename() != null ? event.getAttachmentFilename() : "recibo.pdf";
-                helper.addAttachment(filename, new ByteArrayResource(event.getAttachmentBytes()));
-            }
-            
-            mailSender.send(message);
-            
-            log.info("Email successfully sent to {}", event.getToEmail());
-        } catch (Exception e) {
-            log.error("Failed to send email to {}. Retrying... Reason: {}", event.getToEmail(), e.getMessage());
-            throw new RuntimeException(e);
-        }
+        log.info("[RabbitMQ Listener] Mensagem de email recebida da fila para {}", event.getToEmail());
+        emailDeliveryService.sendEmailSync(event);
     }
 }
