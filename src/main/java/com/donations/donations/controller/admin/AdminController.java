@@ -1,8 +1,10 @@
 package com.donations.donations.controller.admin;
 
 import com.donations.donations.service.admin.*;
+import com.donations.donations.service.wallet.WalletService;
 import com.donations.donations.model.*;
 import com.donations.donations.dto.admin.*;
+import com.donations.donations.dto.creator.WalletTransactionResponseDto;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,6 +31,7 @@ public class AdminController {
     private final ReviewReportUseCase reviewReportUseCase;
     private final GetPlatformSettingsUseCase getPlatformSettingsUseCase;
     private final UpdatePlatformSettingsUseCase updatePlatformSettingsUseCase;
+    private final WalletService walletService;
 
     @GetMapping("/stats")
     public ResponseEntity<AdminStatsResponseDto> getStats() {
@@ -88,5 +91,10 @@ public class AdminController {
     @PutMapping("/settings")
     public ResponseEntity<PlatformSettings> updateSettings(@RequestBody SettingsDto dto) {
         return ResponseEntity.ok(updatePlatformSettingsUseCase.execute(dto));
+    }
+
+    @GetMapping("/wallet/transactions")
+    public ResponseEntity<List<WalletTransactionResponseDto>> getWalletTransactions(@RequestParam(required = false) UUID creatorId) {
+        return ResponseEntity.ok(walletService.getAllTransactions(creatorId));
     }
 }

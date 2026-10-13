@@ -33,6 +33,7 @@ public class RequestPayoutUseCase {
     private final DonationRepository donationRepository;
     private final com.donations.donations.service.realtime.RealtimeEventPublisher realtimeEventPublisher;
     private final EmailRepository emailRepository;
+    private final com.donations.donations.service.wallet.WalletService walletService;
 
     @Value("${app.admin.email:mcumbane@speranza.co.mz}")
     private String adminEmail;
@@ -90,6 +91,34 @@ public class RequestPayoutUseCase {
                 .build();
 
         Payout saved = payoutRepository.save(payout);
+
+        // Registar movimentos de débito no Livro-Razão (Ledger da Carteira)
+        try {
+            walletService.recordTransaction(
+                    creatorId,
+                    com.donations.donations.model.enums.TransactionType.DEBIT,
+                    com.donations.donations.model.enums.TransactionCategory.PAYOUT_REQUESTED,
+                    amount,
+                    "PAYOUT",
+                    saved.getId().toString(),
+                    "Pedido de levantamento para " + phone + " (" + method.name() + ")",
+                    saved.getRequestedAt()
+            );
+
+            walletService.recordTransaction(
+                    creatorId,
+                    com.donations.donations.model.enums.TransactionType.DEBIT,
+                    com.donations.donations.model.enums.TransactionCategory.PLATFORM_FEE,
+                    feeAmount,
+                    "PAYOUT",
+                    saved.getId().toString(),
+                    "Taxa de serviço da plataforma (" + feePercentage + "%)",
+                    saved.getRequestedAt().plusSeconds(1)
+            );
+        } catch (Exception e) {
+            System.err.println("Erro ao registar débitos na carteira para o levantamento: " + e.getMessage());
+        }
+
         try { realtimeEventPublisher.notifyAdminPayouts(saved); } catch (Exception ignored) {}
 
         // Enviar email de notificação detalhado ao SUPER_ADMIN e email de confirmação ao Criador

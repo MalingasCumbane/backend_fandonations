@@ -34,6 +34,7 @@ public class AsyncPaymentProcessor {
     private final EmailRepository emailRepository;
     private final RealtimeEventPublisher realtimeEventPublisher;
     private final GetCreatorStatsUseCase getCreatorStatsUseCase;
+    private final com.donations.donations.service.wallet.WalletService walletService;
 
     @Transactional
     public void processPayment(Donation donation, String phone) {
@@ -65,6 +66,22 @@ public class AsyncPaymentProcessor {
 
             Creator creator = creatorRepository.findById(donation.getCreatorId()).orElse(null);
             if (creator != null) {
+                try {
+                    String supporter = donation.isAnonymous() ? "Apoiador Anónimo" : (donation.getSupporterName() != null ? donation.getSupporterName() : "Apoiador");
+                    walletService.recordTransaction(
+                            creator.getId(),
+                            com.donations.donations.model.enums.TransactionType.CREDIT,
+                            com.donations.donations.model.enums.TransactionCategory.DONATION_RECEIVED,
+                            donation.getAmount(),
+                            "DONATION",
+                            donation.getReference(),
+                            "Apoio recebido de " + supporter + (donation.getMethod() != null ? " (" + donation.getMethod().name() + ")" : ""),
+                            donation.getCreatedAt() != null ? donation.getCreatedAt() : java.time.LocalDateTime.now()
+                    );
+                } catch (Exception e) {
+                    log.error("Erro ao registar movimento de carteira para doação {}: {}", donation.getReference(), e.getMessage());
+                }
+
                 Notification notification = Notification.builder()
                         .userId(creator.getUserId())
                         .title("Nova Doação!")

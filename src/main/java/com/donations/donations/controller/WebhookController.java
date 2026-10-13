@@ -26,6 +26,7 @@ public class WebhookController {
     private final CampaignRepository campaignRepository;
     private final NotificationRepository notificationRepository;
     private final CreatorRepository creatorRepository;
+    private final com.donations.donations.service.wallet.WalletService walletService;
 
     @PostMapping("/payments/mpesa")
     public ResponseEntity<Void> mpesaCallback(@RequestBody Map<String, Object> payload) {
@@ -56,6 +57,20 @@ public class WebhookController {
             // Notify creator
             Creator creator = creatorRepository.findById(donation.getCreatorId()).orElse(null);
             if (creator != null) {
+                try {
+                    String supporter = donation.isAnonymous() ? "Apoiador Anónimo" : (donation.getSupporterName() != null ? donation.getSupporterName() : "Apoiador");
+                    walletService.recordTransaction(
+                            creator.getId(),
+                            com.donations.donations.model.enums.TransactionType.CREDIT,
+                            com.donations.donations.model.enums.TransactionCategory.DONATION_RECEIVED,
+                            donation.getAmount(),
+                            "DONATION",
+                            donation.getReference(),
+                            "Apoio recebido de " + supporter + (donation.getMethod() != null ? " (" + donation.getMethod().name() + ")" : ""),
+                            donation.getCreatedAt() != null ? donation.getCreatedAt() : java.time.LocalDateTime.now()
+                    );
+                } catch (Exception ignored) {}
+
                 notificationRepository.save(Notification.builder()
                         .userId(creator.getUserId())
                         .title("Novo Apoio!")

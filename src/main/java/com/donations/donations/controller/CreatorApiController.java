@@ -31,6 +31,7 @@ public class CreatorApiController {
     private final GetCreatorStatsUseCase getCreatorStatsUseCase;
     private final GetCreatorPayoutsUseCase getCreatorPayoutsUseCase;
     private final RequestPayoutUseCase requestPayoutUseCase;
+    private final com.donations.donations.service.wallet.WalletService walletService;
 
     private UUID getCreatorId(UUID userId) {
         return creatorRepository.findByUserId(userId).orElseThrow(() -> new IllegalArgumentException("Criador não encontrado")).getId();
@@ -92,5 +93,13 @@ public class CreatorApiController {
             creatorRepository.save(c);
         }
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/wallet/transactions/me")
+    public ResponseEntity<List<com.donations.donations.dto.creator.WalletTransactionResponseDto>> getMyWalletTransactions(
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        UUID creatorId = getCreatorId(userDetails.getId());
+        return ResponseEntity.ok(walletService.getTransactionsForCreator(creatorId));
     }
 }
