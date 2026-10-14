@@ -30,6 +30,8 @@ public class PhoneVerification extends TimeStamp {
 
     private String phoneNumber;
 
+    private String provider;
+
     private String otpCode;
 
     private LocalDateTime expiresAt;

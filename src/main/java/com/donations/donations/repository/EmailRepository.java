@@ -10,4 +10,7 @@ public interface EmailRepository {
     void sendPayoutRequestedCreatorEmail(String creatorEmail, String creatorName, String amount, String method, String phone, String fee, String totalDeducted, String date);
     void sendPayoutApprovedEmail(String creatorEmail, String creatorName, String amount, String method, String phone, String transactionRef, String note, String date);
     void sendPayoutRejectedEmail(String creatorEmail, String creatorName, String amount, String method, String reason, String date);
+    void sendPasswordResetEmail(String toEmail, String token);
+    void sendPhoneRemovalOtpEmail(String toEmail, String otp, String phone, String provider);
+    void sendPayoutOtpEmail(String toEmail, String otp, String amount, String method, String phone);
 }

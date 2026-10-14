@@ -717,4 +717,186 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
 
         dispatch(event);
     }
+
+    @Override
+    public void sendPasswordResetEmail(String toEmail, String token) {
+        String resetUrl = frontendUrl + "/redefinir-senha?token=" + token;
+
+        String htmlBody = """
+                <!DOCTYPE html>
+                <html lang="pt">
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; margin: 0; padding: 40px 20px; color: #111827; -webkit-font-smoothing: antialiased; }
+                        .wrapper { max-width: 520px; margin: 0 auto; }
+                        .logo { text-align: center; margin-bottom: 30px; }
+                        .logo h1 { color: #111827; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+                        .logo span { color: #6366f1; }
+                        .card { background-color: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #f3f4f6; text-align: center; }
+                        .icon { background-color: #fef3c7; color: #d97706; width: 64px; height: 64px; border-radius: 100px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 24px; }
+                        .title { font-size: 22px; font-weight: 700; margin-top: 0; margin-bottom: 12px; color: #111827; letter-spacing: -0.3px; }
+                        .text { font-size: 15px; line-height: 1.6; color: #4b5563; margin-bottom: 32px; }
+                        .btn { display: inline-block; background-color: #111827; color: #ffffff !important; font-weight: 600; font-size: 15px; text-decoration: none; padding: 16px 32px; border-radius: 9999px; transition: background-color 0.2s, transform 0.2s; box-shadow: 0 4px 14px 0 rgba(0,0,0,0.1); }
+                        .btn:hover { background-color: #374151; transform: translateY(-1px); }
+                        .divider { height: 1px; background-color: #f3f4f6; margin: 32px 0; }
+                        .subtext { font-size: 13px; color: #9ca3af; line-height: 1.5; }
+                        .raw-link { color: #6366f1; text-decoration: underline; word-break: break-all; }
+                        .footer { text-align: center; margin-top: 32px; font-size: 13px; color: #9ca3af; }
+                    </style>
+                </head>
+                <body>
+                    <div class="wrapper">
+                        <div class="logo">
+                            <h1>TXOP<span>A</span></h1>
+                        </div>
+                        <div class="card">
+                            <div class="icon">🔐</div>
+                            <h2 class="title">Redefinir a sua senha</h2>
+                            <p class="text">Recebemos um pedido para alterar a senha da sua conta no Txopa. Clique no botão abaixo para definir uma nova palavra-passe:</p>
+                            <a href="%s" class="btn">Redefinir palavra-passe</a>
+                
+                            <div class="divider"></div>
+                            
+                            <p class="subtext" style="color: #b91c1c; font-weight: 500;">
+                                &#9888;&#65039; Este link expira dentro de 1 hora por motivos de seguran&ccedil;a.
+                            </p>
+                
+                            <p class="subtext">Se o bot&atilde;o n&atilde;o funcionar, copie e cole o seguinte link no seu navegador:<br>
+                            <a href="%s" class="raw-link">%s</a></p>
+                        </div>
+                        <div class="footer">
+                            &copy; 2026 Txopa Inc. &bull; Maputo, Mo&ccedil;ambique<br>
+                            N&atilde;o solicitou a altera&ccedil;&atilde;o? Pode ignorar este email com toda a seguran&ccedil;a.
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """.formatted(resetUrl, resetUrl, resetUrl);
+
+        EmailEvent event = EmailEvent.builder()
+                .toEmail(toEmail)
+                .subject("Redefinição de senha - Txopa")
+                .body(htmlBody)
+                .build();
+
+        dispatch(event);
+    }
+
+    @Override
+    public void sendPhoneRemovalOtpEmail(String toEmail, String otp, String phone, String provider) {
+        String providerName = "MPESA".equalsIgnoreCase(provider) ? "Vodacom M-Pesa" : ("EMOLA".equalsIgnoreCase(provider) ? "Movitel e-Mola" : provider);
+
+        String htmlBody = """
+                <!DOCTYPE html>
+                <html lang="pt">
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; margin: 0; padding: 40px 20px; color: #111827; -webkit-font-smoothing: antialiased; }
+                        .wrapper { max-width: 520px; margin: 0 auto; }
+                        .logo { text-align: center; margin-bottom: 30px; }
+                        .logo h1 { color: #111827; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+                        .logo span { color: #6366f1; }
+                        .card { background-color: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #f3f4f6; text-align: center; }
+                        .icon { background-color: #fee2e2; color: #dc2626; width: 64px; height: 64px; border-radius: 100px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 24px; }
+                        .title { font-size: 22px; font-weight: 700; margin-top: 0; margin-bottom: 12px; color: #111827; letter-spacing: -0.3px; }
+                        .text { font-size: 15px; line-height: 1.6; color: #4b5563; margin-bottom: 24px; }
+                        .otp-box { background-color: #f3f4f6; border-radius: 12px; padding: 24px; margin-bottom: 24px; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #111827; }
+                        .footer { text-align: center; margin-top: 32px; font-size: 13px; color: #9ca3af; }
+                    </style>
+                </head>
+                <body>
+                    <div class="wrapper">
+                        <div class="logo">
+                            <h1>TXOP<span>A</span></h1>
+                        </div>
+                        <div class="card">
+                            <div class="icon">🗑️</div>
+                            <h2 class="title">Remoção de Número Telefónico</h2>
+                            <p class="text">Foi solicitada a remoção do número <strong>%s (%s)</strong> da sua conta Txopa. Para confirmar esta alteração em segurança, utilize o código de validação:</p>
+                            <div class="otp-box">%s</div>
+                            <p class="text" style="font-size: 13px; margin-bottom: 0; color: #dc2626;">Este código expira em 10 minutos. Se não solicitou a remoção deste número, proteja a sua conta imediatamente.</p>
+                        </div>
+                        <div class="footer">
+                            &copy; 2026 Txopa Inc. &bull; Maputo, Moçambique
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """.formatted(phone, providerName, otp);
+
+        EmailEvent event = EmailEvent.builder()
+                .toEmail(toEmail)
+                .subject("Código de Confirmação: Remoção de Número - " + otp)
+                .body(htmlBody)
+                .build();
+
+        dispatch(event);
+    }
+
+    @Override
+    public void sendPayoutOtpEmail(String toEmail, String otp, String amount, String method, String phone) {
+        String methodName = "MPESA".equalsIgnoreCase(method) ? "Vodacom M-Pesa" : ("EMOLA".equalsIgnoreCase(method) ? "Movitel e-Mola" : method);
+
+        String htmlBody = """
+                <!DOCTYPE html>
+                <html lang="pt">
+                <head>
+                    <meta charset="utf-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <style>
+                        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+                        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #fafafa; margin: 0; padding: 40px 20px; color: #111827; -webkit-font-smoothing: antialiased; }
+                        .wrapper { max-width: 520px; margin: 0 auto; }
+                        .logo { text-align: center; margin-bottom: 30px; }
+                        .logo h1 { color: #111827; margin: 0; font-size: 28px; font-weight: 800; letter-spacing: -0.5px; }
+                        .logo span { color: #6366f1; }
+                        .card { background-color: #ffffff; border-radius: 16px; padding: 40px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); border: 1px solid #f3f4f6; text-align: center; }
+                        .icon { background-color: #ecfdf5; color: #059669; width: 64px; height: 64px; border-radius: 100px; display: inline-flex; align-items: center; justify-content: center; font-size: 28px; margin-bottom: 24px; }
+                        .title { font-size: 22px; font-weight: 700; margin-top: 0; margin-bottom: 12px; color: #111827; letter-spacing: -0.3px; }
+                        .text { font-size: 15px; line-height: 1.6; color: #4b5563; margin-bottom: 24px; }
+                        .details { background-color: #f9fafb; border-radius: 12px; padding: 18px; margin-bottom: 24px; text-align: left; font-size: 14px; border: 1px solid #e5e7eb; }
+                        .otp-box { background-color: #f3f4f6; border-radius: 12px; padding: 24px; margin-bottom: 24px; font-size: 32px; font-weight: 800; letter-spacing: 8px; color: #111827; }
+                        .footer { text-align: center; margin-top: 32px; font-size: 13px; color: #9ca3af; }
+                    </style>
+                </head>
+                <body>
+                    <div class="wrapper">
+                        <div class="logo">
+                            <h1>TXOP<span>A</span></h1>
+                        </div>
+                        <div class="card">
+                            <div class="icon">💰</div>
+                            <h2 class="title">Autorização de Levantamento</h2>
+                            <p class="text">Foi solicitado um levantamento na sua conta Txopa com os seguintes dados:</p>
+                            <div class="details">
+                                <p style="margin: 6px 0; color: #374151;"><strong>Valor a Receber:</strong> %s MT</p>
+                                <p style="margin: 6px 0; color: #374151;"><strong>Método:</strong> %s</p>
+                                <p style="margin: 6px 0; color: #374151;"><strong>Número de Destino:</strong> %s</p>
+                            </div>
+                            <p class="text">Para autorizar e concluir o seu pedido, introduza o código de segurança:</p>
+                            <div class="otp-box">%s</div>
+                            <p class="text" style="font-size: 13px; margin-bottom: 0;">Este código expira em 10 minutos. Nunca partilhe este código com terceiros.</p>
+                        </div>
+                        <div class="footer">
+                            &copy; 2026 Txopa Inc. &bull; Maputo, Moçambique
+                        </div>
+                    </div>
+                </body>
+                </html>
+                """.formatted(amount, methodName, phone, otp);
+
+        EmailEvent event = EmailEvent.builder()
+                .toEmail(toEmail)
+                .subject("Código de Autorização de Levantamento: " + otp)
+                .body(htmlBody)
+                .build();
+
+        dispatch(event);
+    }
 }

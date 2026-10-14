@@ -1,6 +1,8 @@
 package com.donations.donations.controller;
 
+import com.donations.donations.dto.ForgotPasswordCommand;
 import com.donations.donations.dto.LoginCommand;
+import com.donations.donations.dto.ResetPasswordCommand;
 import com.donations.donations.dto.SignupCommand;
 import com.donations.donations.service.*;
 import com.donations.donations.model.User;
@@ -29,6 +31,8 @@ public class AuthController {
     private final LogoutUseCase logoutUseCase;
     private final GetCurrentUserUseCase getCurrentUserUseCase;
     private final CreatorRepository creatorRepository;
+    private final ForgotPasswordUseCase forgotPasswordUseCase;
+    private final ResetPasswordUseCase resetPasswordUseCase;
 
     @GetMapping("/me")
     public ResponseEntity<?> getCurrentUser(@org.springframework.security.core.annotation.AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -104,5 +108,25 @@ public class AuthController {
     public ResponseEntity<MessageResponse> logout() {
         ResponseCookie cookie = logoutUseCase.execute();
         return ResponseEntity.ok().header(HttpHeaders.SET_COOKIE, cookie.toString()).body(new MessageResponse("Logged out successfully!"));
+    }
+
+    @PostMapping("/forgot-password")
+    public ResponseEntity<MessageResponse> forgotPassword(@RequestBody ForgotPasswordCommand command) {
+        try {
+            forgotPasswordUseCase.execute(command);
+            return ResponseEntity.ok(new MessageResponse("Se o email estiver registado, enviámos instruções para redefinir a palavra-passe."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
+    }
+
+    @PostMapping("/reset-password")
+    public ResponseEntity<MessageResponse> resetPassword(@RequestBody ResetPasswordCommand command) {
+        try {
+            resetPasswordUseCase.execute(command);
+            return ResponseEntity.ok(new MessageResponse("Palavra-passe redefinida com sucesso! Já pode iniciar sessão."));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(new MessageResponse(e.getMessage()));
+        }
     }
 }

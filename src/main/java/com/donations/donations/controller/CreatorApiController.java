@@ -32,6 +32,9 @@ public class CreatorApiController {
     private final GetCreatorPayoutsUseCase getCreatorPayoutsUseCase;
     private final RequestPayoutUseCase requestPayoutUseCase;
     private final com.donations.donations.service.wallet.WalletService walletService;
+    private final com.donations.donations.service.security.SecurityOtpService securityOtpService;
+    private final com.donations.donations.repository.EmailRepository emailRepository;
+    private final com.donations.donations.repository.UserRepository userRepository;
 
     private UUID getCreatorId(UUID userId) {
         return creatorRepository.findByUserId(userId).orElseThrow(() -> new IllegalArgumentException("Criador não encontrado")).getId();
@@ -75,24 +78,37 @@ public class CreatorApiController {
         return ResponseEntity.ok(getCreatorPayoutsUseCase.execute(getCreatorId(userDetails.getId())));
     }
 
+    @PostMapping("/payouts/me/send-otp")
+    public ResponseEntity<?> sendPayoutOtp(@RequestBody com.donations.donations.dto.creator.PayoutRequestDto request, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        UUID creatorId = getCreatorId(userDetails.getId());
+        var validation = requestPayoutUseCase.validatePayoutRequest(creatorId, request.getAmount(), request.getMethod(), request.getPhone());
+
+        String targetInfo = "method=" + request.getMethod().name() + ";phone=" + validation.digits() + ";amount=" + request.getAmount();
+        String otp = securityOtpService.generateAndSaveOtp(userDetails.getId(), "PAYOUT_REQUEST", targetInfo);
+
+        com.donations.donations.model.User user = userRepository.findById(userDetails.getId())
+                .orElseThrow(() -> new IllegalArgumentException("Utilizador não encontrado."));
+
+        String amountFormatted = String.format("%,.2f", request.getAmount());
+        emailRepository.sendPayoutOtpEmail(user.getEmail(), otp, amountFormatted, request.getMethod().name(), validation.digits());
+
+        return ResponseEntity.ok(Map.of(
+                "message", "Código de autorização enviado para o seu email.",
+                "expiresInMinutes", 10
+        ));
+    }
+
     @PostMapping("/payouts/me")
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Payout> requestPayout(@RequestBody Payout payout, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+    public ResponseEntity<Payout> requestPayout(@RequestBody com.donations.donations.dto.creator.PayoutRequestDto request, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         UUID creatorId = getCreatorId(userDetails.getId());
-        payout.setCreatorId(creatorId);
-        return ResponseEntity.ok(requestPayoutUseCase.execute(payout.getCreatorId(), payout.getAmount(), payout.getMethod(), payout.getPhone()));
-    }
-    
-    @PostMapping("/creators/me/avatar")
-    public ResponseEntity<Void> uploadAvatar(@RequestBody Map<String, String> body, @AuthenticationPrincipal UserDetailsImpl userDetails) {
-        String avatar = body.get("avatar");
-        if (avatar != null) {
-            UUID creatorId = getCreatorId(userDetails.getId());
-            Creator c = creatorRepository.findById(creatorId).orElseThrow();
-            c.setAvatarUrl(avatar);
-            creatorRepository.save(c);
+        if (request.getOtp() == null || request.getOtp().isBlank()) {
+            throw new IllegalArgumentException("O código OTP é obrigatório para confirmar o levantamento.");
         }
-        return ResponseEntity.ok().build();
+        securityOtpService.verifyAndConsumeOtp(userDetails.getId(), "PAYOUT_REQUEST", request.getOtp());
+
+        Payout saved = requestPayoutUseCase.execute(creatorId, request.getAmount(), request.getMethod(), request.getPhone());
+        return ResponseEntity.status(HttpStatus.CREATED).body(saved);
     }
 
     @GetMapping("/wallet/transactions/me")

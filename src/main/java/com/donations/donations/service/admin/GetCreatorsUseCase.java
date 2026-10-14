@@ -22,6 +22,8 @@ public class GetCreatorsUseCase {
             map.put("username", c.getUsername() != null ? c.getUsername() : "");
             map.put("email", c.getEmail() != null ? c.getEmail() : "");
             map.put("phone", c.getPhone() != null ? c.getPhone() : "");
+            map.put("mpesaPhone", c.getMpesaPhone() != null ? c.getMpesaPhone() : "");
+            map.put("emolaPhone", c.getEmolaPhone() != null ? c.getEmolaPhone() : "");
             map.put("city", c.getCity() != null ? c.getCity() : "");
             map.put("country", c.getCountry() != null ? c.getCountry().getName() : "");
             map.put("category", c.getCategory() != null ? c.getCategory().getName() : "");

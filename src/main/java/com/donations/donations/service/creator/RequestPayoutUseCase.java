@@ -38,7 +38,22 @@ public class RequestPayoutUseCase {
     @Value("${app.admin.email:mcumbane@speranza.co.mz}")
     private String adminEmail;
 
-    public Payout execute(UUID creatorId, BigDecimal amount, PaymentMethod method, String phone) {
+    public record PayoutValidationResult(
+            Creator creator,
+            String digits,
+            BigDecimal feeAmount,
+            BigDecimal totalRequired,
+            PlatformSettings settings
+    ) {}
+
+    public PayoutValidationResult validatePayoutRequest(UUID creatorId, BigDecimal amount, PaymentMethod method, String phone) {
+        if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
+            throw new IllegalArgumentException("O valor do levantamento é inválido.");
+        }
+        if (method == null) {
+            throw new IllegalArgumentException("O método de pagamento é obrigatório.");
+        }
+
         Creator creator = creatorRepository.findById(creatorId)
                 .orElseThrow(() -> new IllegalArgumentException("Criador não encontrado."));
 
@@ -54,7 +69,7 @@ public class RequestPayoutUseCase {
         }
 
         if (amount.compareTo(settings.getMinPayoutAmount()) < 0) {
-            throw new IllegalArgumentException("O valor é inferior ao mínimo permitido.");
+            throw new IllegalArgumentException("O valor é inferior ao mínimo permitido (" + settings.getMinPayoutAmount() + " MT).");
         }
 
         List<Donation> donations = donationRepository.findByCreatorId(creatorId);
@@ -81,11 +96,61 @@ public class RequestPayoutUseCase {
             throw new IllegalArgumentException("Saldo insuficiente para cobrir o levantamento (" + amount + " MT) mais a taxa da plataforma (" + feeAmount + " MT). Total necessário: " + totalRequired + " MT.");
         }
 
+        // Determinar e validar o número de telefone de destino conforme o método
+        String targetPhone = phone;
+        if (targetPhone == null || targetPhone.isBlank()) {
+            if (method == PaymentMethod.MPESA) {
+                targetPhone = creator.getMpesaPhone() != null ? creator.getMpesaPhone() : creator.getPhone();
+            } else if (method == PaymentMethod.EMOLA) {
+                targetPhone = creator.getEmolaPhone() != null ? creator.getEmolaPhone() : creator.getPhone();
+            }
+        }
+
+        if (targetPhone == null || targetPhone.isBlank()) {
+            throw new IllegalArgumentException("Nenhum número de telefone configurado para o método " + method.name() + ".");
+        }
+
+        String digits = targetPhone.replaceAll("\\D", "").replaceFirst("^258", "");
+        if (digits.length() != 9) {
+            throw new IllegalArgumentException("O número de telemóvel para levantamento deve ter 9 dígitos.");
+        }
+
+        if (method == PaymentMethod.MPESA && !(digits.startsWith("84") || digits.startsWith("85"))) {
+            throw new IllegalArgumentException("O número selecionado (" + digits + ") não é um número válido da Vodacom M-Pesa (deve começar por 84 ou 85).");
+        }
+
+        if (method == PaymentMethod.EMOLA && !(digits.startsWith("86") || digits.startsWith("87"))) {
+            throw new IllegalArgumentException("O número selecionado (" + digits + ") não é um número válido da Movitel e-Mola (deve começar por 86 ou 87).");
+        }
+
+        // Validação de segurança: garantir que o número é um dos números registados do criador
+        String mpesaDigits = creator.getMpesaPhone() != null ? creator.getMpesaPhone().replaceAll("\\D", "").replaceFirst("^258", "") : null;
+        String emolaDigits = creator.getEmolaPhone() != null ? creator.getEmolaPhone().replaceAll("\\D", "").replaceFirst("^258", "") : null;
+        String generalDigits = creator.getPhone() != null ? creator.getPhone().replaceAll("\\D", "").replaceFirst("^258", "") : null;
+
+        boolean matchesVerified = digits.equals(mpesaDigits) || digits.equals(emolaDigits) || digits.equals(generalDigits);
+        if (!matchesVerified) {
+            throw new IllegalArgumentException("O número de telefone indicado (" + digits + ") não está verificado na sua conta Txopa.");
+        }
+
+        return new PayoutValidationResult(creator, digits, feeAmount, totalRequired, settings);
+    }
+
+    public Payout execute(UUID creatorId, BigDecimal amount, PaymentMethod method, String phone) {
+        PayoutValidationResult val = validatePayoutRequest(creatorId, amount, method, phone);
+        Creator creator = val.creator();
+        String digits = val.digits();
+        BigDecimal feeAmount = val.feeAmount();
+        BigDecimal totalRequired = val.totalRequired();
+        BigDecimal feePercentage = val.settings().getPlatformFeePercentage() != null 
+                ? val.settings().getPlatformFeePercentage() 
+                : new BigDecimal("10.00");
+
         Payout payout = Payout.builder()
                 .creatorId(creatorId)
                 .amount(amount)
                 .method(method)
-                .phone(phone)
+                .phone(digits)
                 .status(PayoutStatus.PENDING)
                 .requestedAt(LocalDateTime.now())
                 .build();

@@ -31,6 +31,13 @@ public class Creator extends TimeStamp {
 
     private String email;
     private String phone;
+
+    @Column(name = "mpesa_phone")
+    private String mpesaPhone;
+
+    @Column(name = "emola_phone")
+    private String emolaPhone;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "country_id")
     private Country country;
