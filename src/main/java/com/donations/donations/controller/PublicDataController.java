@@ -33,6 +33,7 @@ public class PublicDataController {
     private final ProcessDonationUseCase processDonationUseCase;
     private final com.donations.donations.repository.CampaignRepository campaignRepository;
     private final com.donations.donations.repository.PlatformSettingsRepository platformSettingsRepository;
+    private final com.donations.donations.repository.DonationRepository donationRepository;
 
 
     // Controllers will be implemented here. For now, returning empty to allow compiling and check.
@@ -187,7 +188,44 @@ public class PublicDataController {
 
     @GetMapping("/donations/{reference}")
     public PublicDonationStatus getDonation(@PathVariable String reference) {
-        return PublicDonationStatus.builder().build();
+        com.donations.donations.model.Donation donation = donationRepository.findByReference(reference)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Doação não encontrada com a referência: " + reference));
+
+        String creatorUsername = creatorJpaRepository.findById(donation.getCreatorId())
+                .map(com.donations.donations.model.Creator::getUsername)
+                .orElse(null);
+
+        return PublicDonationStatus.builder()
+                .reference(donation.getReference())
+                .status(donation.getStatus())
+                .amount(donation.getAmount())
+                .method(donation.getMethod())
+                .failureReason(donation.getFailureReason())
+                .creatorUsername(creatorUsername)
+                .build();
+    }
+
+    @GetMapping(value = "/donations/{reference}/pdf", produces = "application/pdf")
+    public org.springframework.http.ResponseEntity<byte[]> downloadDonationPdf(@PathVariable String reference) {
+        com.donations.donations.model.Donation donation = donationRepository.findByReference(reference)
+                .orElseThrow(() -> new java.util.NoSuchElementException("Doação não encontrada com a referência: " + reference));
+
+        String creatorName = creatorJpaRepository.findById(donation.getCreatorId())
+                .map(com.donations.donations.model.Creator::getFullName)
+                .orElse("Criador");
+
+        byte[] pdfBytes = com.donations.donations.util.PdfReceiptGenerator.generateReceipt(
+                donation.getSupporterEmail(),
+                creatorName,
+                donation.getAmount() != null ? donation.getAmount().stripTrailingZeros().toPlainString() : "0",
+                donation.getReference(),
+                donation.getMethod() != null ? donation.getMethod().name() : "M-Pesa / e-Mola"
+        );
+
+        return org.springframework.http.ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"Recibo-" + reference + ".pdf\"")
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "application/pdf")
+                .body(pdfBytes);
     }
 
     @PostMapping("/reports")

@@ -1,10 +1,8 @@
 package com.donations.donations.service.storage;
 
-import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
-@Data
 @Component
 @ConfigurationProperties(prefix = "storage.cloudflare.r2")
 public class CloudflareR2Properties {
@@ -45,11 +43,70 @@ public class CloudflareR2Properties {
      */
     private String localUploadDir = "./uploads";
 
+    public CloudflareR2Properties() {
+    }
+
     public boolean isConfigured() {
         return enabled &&
                 accountId != null && !accountId.isBlank() &&
                 accessKeyId != null && !accessKeyId.isBlank() &&
                 secretAccessKey != null && !secretAccessKey.isBlank() &&
                 bucketName != null && !bucketName.isBlank();
+    }
+
+    public boolean isEnabled() {
+        return enabled;
+    }
+
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
+    public String getAccountId() {
+        return accountId;
+    }
+
+    public void setAccountId(String accountId) {
+        this.accountId = accountId;
+    }
+
+    public String getAccessKeyId() {
+        return accessKeyId;
+    }
+
+    public void setAccessKeyId(String accessKeyId) {
+        this.accessKeyId = accessKeyId;
+    }
+
+    public String getSecretAccessKey() {
+        return secretAccessKey;
+    }
+
+    public void setSecretAccessKey(String secretAccessKey) {
+        this.secretAccessKey = secretAccessKey;
+    }
+
+    public String getBucketName() {
+        return bucketName;
+    }
+
+    public void setBucketName(String bucketName) {
+        this.bucketName = bucketName;
+    }
+
+    public String getPublicUrlPrefix() {
+        return publicUrlPrefix;
+    }
+
+    public void setPublicUrlPrefix(String publicUrlPrefix) {
+        this.publicUrlPrefix = publicUrlPrefix;
+    }
+
+    public String getLocalUploadDir() {
+        return localUploadDir;
+    }
+
+    public void setLocalUploadDir(String localUploadDir) {
+        this.localUploadDir = localUploadDir;
     }
 }

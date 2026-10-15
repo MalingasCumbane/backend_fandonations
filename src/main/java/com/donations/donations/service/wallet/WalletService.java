@@ -1,5 +1,6 @@
 package com.donations.donations.service.wallet;
 
+import com.donations.donations.dto.PageResponse;
 import com.donations.donations.dto.creator.WalletTransactionResponseDto;
 import com.donations.donations.model.Creator;
 import com.donations.donations.model.Donation;
@@ -105,7 +106,7 @@ public class WalletService {
     }
 
     @Transactional
-    public com.donations.donations.dto.PageResponse<WalletTransactionResponseDto> getTransactionsForCreatorPaged(UUID creatorId, int page, int size) {
+    public PageResponse<WalletTransactionResponseDto> getTransactionsForCreatorPaged(UUID creatorId, int page, int size) {
         if (walletTransactionRepository.countByCreatorId(creatorId) == 0) {
             backfillHistory(creatorId);
         }
@@ -117,7 +118,7 @@ public class WalletService {
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), Math.max(1, size));
         org.springframework.data.domain.Page<WalletTransaction> pageResult = walletTransactionRepository.findByCreatorIdOrderByCreatedAtDesc(creatorId, pageable);
 
-        return com.donations.donations.dto.PageResponse.of(pageResult, tx -> toDto(tx, username, fullName));
+        return PageResponse.of(pageResult, tx -> toDto(tx, username, fullName));
     }
 
     @Transactional

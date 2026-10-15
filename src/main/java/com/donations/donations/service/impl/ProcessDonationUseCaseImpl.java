@@ -73,7 +73,7 @@ public class ProcessDonationUseCaseImpl implements ProcessDonationUseCase {
                 .supporterName(command.getSupporterName())
                 .supporterEmail(command.getSupporterEmail())
                 .supporterPhone(command.getPhone())
-                .reference(UUID.randomUUID().toString().substring(0, 8).toUpperCase())
+                .reference("APO" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase())
                 .build();
 
         donation = donationRepository.save(donation);

@@ -8,6 +8,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+
 @Service
 @Primary
 @RequiredArgsConstructor
@@ -27,5 +29,15 @@ public class PaymentGatewayDispatcher implements PaymentGatewayRepository {
                 .success(false)
                 .failureReason("Método de pagamento não suportado.")
                 .build();
+    }
+
+    @Override
+    public PaymentResult queryTransactionStatus(String queryReference, String thirdPartyReference) {
+        return mpesaPaymentGateway.queryTransactionStatus(queryReference, thirdPartyReference);
+    }
+
+    @Override
+    public PaymentResult b2cPayment(String phone, BigDecimal amount, String reference) {
+        return mpesaPaymentGateway.b2cPayment(phone, amount, reference);
     }
 }

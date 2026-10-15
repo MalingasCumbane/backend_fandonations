@@ -27,12 +27,21 @@ import java.util.stream.Collectors;
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final UserDetailsServiceImpl userDetailsService;
     private final AuthEntryPointJwt unauthorizedHandler;
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+
+    public SecurityConfig(
+            UserDetailsServiceImpl userDetailsService,
+            AuthEntryPointJwt unauthorizedHandler,
+            JwtAuthenticationFilter jwtAuthenticationFilter
+    ) {
+        this.userDetailsService = userDetailsService;
+        this.unauthorizedHandler = unauthorizedHandler;
+        this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+    }
 
     @Value("${app.cors.allowed-origins:http://localhost:5173,http://localhost:8000,http://localhost:8080,https://txopa.app,https://www.txopa.app}")
     private String allowedOrigins;
@@ -62,10 +71,14 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**", "/api/public/**", "/api/webhooks/**", "/ws/**").permitAll()
-                        .requestMatchers("/api/admin/**").hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_FINANCE", "ROLE_COMPLIANCE", "ROLE_SUPPORT")
-                        .requestMatchers("/api/creators/**", "/api/campaigns/**", "/api/donations/me", "/api/payouts/me/**", "/api/stats/me", "/api/verifications/me", "/api/notifications/me/**").hasAuthority("ROLE_CREATOR")
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers("/api/admin/**")
+                        .hasAnyAuthority("ROLE_SUPER_ADMIN", "ROLE_ADMIN", "ROLE_FINANCE", "ROLE_COMPLIANCE",
+                                "ROLE_SUPPORT")
+                        .requestMatchers("/api/creators/**", "/api/campaigns/**", "/api/donations/me",
+                                "/api/payouts/me/**", "/api/stats/me", "/api/verifications/me",
+                                "/api/notifications/me/**")
+                        .hasAuthority("ROLE_CREATOR")
+                        .anyRequest().authenticated());
 
         http.authenticationProvider(authenticationProvider());
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
