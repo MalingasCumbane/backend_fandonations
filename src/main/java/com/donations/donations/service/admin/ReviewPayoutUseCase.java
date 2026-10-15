@@ -92,7 +92,13 @@ public class ReviewPayoutUseCase {
         }
 
         try {
-            realtimeEventPublisher.notifyCreatorDonation(finalPayout.getCreatorId(), java.util.Map.of("type", "PAYOUT_STATUS_CHANGED", "status", status.name(), "id", finalPayout.getId().toString()));
+            java.util.Map<String, Object> payoutEvent = new java.util.HashMap<>();
+            payoutEvent.put("type", "PAYOUT_STATUS_CHANGED");
+            payoutEvent.put("status", status.name());
+            payoutEvent.put("id", finalPayout.getId().toString());
+            realtimeEventPublisher.notifyCreatorPayout(finalPayout.getCreatorId(), payoutEvent);
+            realtimeEventPublisher.notifyCreatorDonation(finalPayout.getCreatorId(), payoutEvent);
+            realtimeEventPublisher.notifyAdminPayouts(finalPayout);
         } catch (Exception ignored) {}
 
         // Envio de email com resultado da operação para o Criador

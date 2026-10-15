@@ -37,8 +37,12 @@ public class ReviewCreatorUseCase {
         }
         creator = creatorRepository.save(creator);
         try {
-            realtimeEventPublisher.notifyCreatorDonation(creator.getId(), java.util.Map.of("type", "VERIFICATION_STATUS_CHANGED", "status", status.name()));
+            java.util.Map<String, Object> statusEvent = new java.util.HashMap<>();
+            statusEvent.put("type", "VERIFICATION_STATUS_CHANGED");
+            statusEvent.put("status", status.name());
+            realtimeEventPublisher.notifyCreatorDonation(creator.getId(), statusEvent);
             realtimeEventPublisher.notifyPublicCreator(creator.getUsername(), java.util.Map.of("type", "CREATOR_STATUS_CHANGED", "status", status.name()));
+            realtimeEventPublisher.notifyAdminCreators(creator);
         } catch (Exception ignored) {}
 
         // Update VerificationRequest if pending

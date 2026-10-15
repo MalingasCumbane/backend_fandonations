@@ -101,25 +101,59 @@ public class AsyncPaymentProcessor {
                     );
                 }
 
-                // Disparo de Eventos WebSocket em Tempo Real
+                // Disparo de Eventos WebSocket em Tempo Real (isolados para garantir entrega)
                 try {
                     // 1. Notificar canal público do criador para atualizar metas e doações ao vivo
-                    realtimeEventPublisher.notifyPublicCreator(creator.getUsername(), java.util.Map.of(
-                        "type", "NEW_DONATION",
-                        "amount", donation.getAmount(),
-                        "campaignId", donation.getCampaignId() != null ? donation.getCampaignId().toString() : null
-                    ));
+                    java.util.Map<String, Object> publicPayload = new java.util.HashMap<>();
+                    publicPayload.put("type", "NEW_DONATION");
+                    publicPayload.put("amount", donation.getAmount());
+                    publicPayload.put("campaignId", donation.getCampaignId() != null ? donation.getCampaignId().toString() : "");
+                    publicPayload.put("supporterName", donation.isAnonymous() ? "Anónimo" : (donation.getSupporterName() != null ? donation.getSupporterName() : "Anónimo"));
+                    publicPayload.put("message", donation.getMessage() != null ? donation.getMessage() : "");
+                    publicPayload.put("createdAt", donation.getCreatedAt() != null ? donation.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
+                    realtimeEventPublisher.notifyPublicCreator(creator.getUsername(), publicPayload);
+                } catch (Exception wsEx) {
+                    log.error("Erro ao publicar evento WebSocket público do criador: {}", wsEx.getMessage(), wsEx);
+                }
 
+                try {
                     // 2. Notificar canal privado do criador (Dashboard)
-                    realtimeEventPublisher.notifyCreatorDonation(creator.getId(), donation);
+                    java.util.Map<String, Object> creatorPayload = new java.util.HashMap<>();
+                    creatorPayload.put("id", donation.getId() != null ? donation.getId().toString() : "");
+                    creatorPayload.put("reference", donation.getReference());
+                    creatorPayload.put("amount", donation.getAmount());
+                    creatorPayload.put("method", donation.getMethod() != null ? donation.getMethod().name() : "MPESA");
+                    creatorPayload.put("status", donation.getStatus() != null ? donation.getStatus().name() : "SUCCESS");
+                    creatorPayload.put("supporterName", donation.isAnonymous() ? "Anónimo" : (donation.getSupporterName() != null ? donation.getSupporterName() : "Anónimo"));
+                    creatorPayload.put("createdAt", donation.getCreatedAt() != null ? donation.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
+                    realtimeEventPublisher.notifyCreatorDonation(creator.getId(), creatorPayload);
+                } catch (Exception wsEx) {
+                    log.error("Erro ao publicar evento WebSocket de doação para criador: {}", wsEx.getMessage(), wsEx);
+                }
 
+                try {
                     // 3. Atualizar estatísticas do criador em tempo real
                     realtimeEventPublisher.notifyCreatorStats(creator.getId(), getCreatorStatsUseCase.execute(creator.getId()));
-
-                    // 4. Notificar painel administrativo sobre a transação em tempo real
-                    realtimeEventPublisher.notifyAdminTransactions(donation);
                 } catch (Exception wsEx) {
-                    log.error("Erro ao publicar evento WebSocket de doação: {}", wsEx.getMessage());
+                    log.error("Erro ao publicar evento WebSocket de estatísticas do criador: {}", wsEx.getMessage(), wsEx);
+                }
+
+                try {
+                    // 4. Notificar painel administrativo sobre a transação em tempo real
+                    java.util.Map<String, Object> adminPayload = new java.util.HashMap<>();
+                    adminPayload.put("id", donation.getId() != null ? donation.getId().toString() : "");
+                    adminPayload.put("reference", donation.getReference());
+                    adminPayload.put("amount", donation.getAmount());
+                    adminPayload.put("creatorId", creator.getId().toString());
+                    adminPayload.put("creatorUsername", creator.getUsername());
+                    adminPayload.put("creatorFullName", creator.getFullName());
+                    adminPayload.put("method", donation.getMethod() != null ? donation.getMethod().name() : "MPESA");
+                    adminPayload.put("type", "CREDIT");
+                    adminPayload.put("category", "DONATION_RECEIVED");
+                    adminPayload.put("createdAt", donation.getCreatedAt() != null ? donation.getCreatedAt().toString() : java.time.LocalDateTime.now().toString());
+                    realtimeEventPublisher.notifyAdminTransactions(adminPayload);
+                } catch (Exception wsEx) {
+                    log.error("Erro ao publicar evento WebSocket para administração: {}", wsEx.getMessage(), wsEx);
                 }
             }
         } else {
