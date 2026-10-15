@@ -56,18 +56,11 @@ public class SendPhoneOtpUseCase {
         }
 
         String otp = String.format("%06d", new Random().nextInt(1000000));
-        
-        PhoneVerification entity = PhoneVerification.builder()
-                .userId(userId)
-                .phoneNumber(digits)
-                .provider(provider)
-                .otpCode(otp)
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
-                .verified(false)
-                .build();
-                
+
+        PhoneVerification entity = PhoneVerification.builder().userId(userId).phoneNumber(digits).provider(provider).otpCode(otp).expiresAt(LocalDateTime.now().plusMinutes(10)).verified(false).build();
+
         repository.save(entity);
-        
+
         User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("Utilizador não encontrado"));
         emailRepository.sendPhoneOtpEmail(user.getEmail(), otp, digits);
     }

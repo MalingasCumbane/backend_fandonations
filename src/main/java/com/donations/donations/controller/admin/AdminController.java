@@ -39,8 +39,11 @@ public class AdminController {
     }
 
     @GetMapping("/creators")
-    public ResponseEntity<List<java.util.Map<String, Object>>> getCreators() {
-        return ResponseEntity.ok(getCreatorsUseCase.execute());
+    public ResponseEntity<com.donations.donations.dto.PageResponse<java.util.Map<String, Object>>> getCreators(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(getCreatorsUseCase.executePaged(page, size));
     }
 
     @PostMapping("/creators/{id}/review")
@@ -54,18 +57,27 @@ public class AdminController {
     }
 
     @GetMapping("/verifications")
-    public ResponseEntity<List<VerificationRequest>> getVerifications() {
-        return ResponseEntity.ok(getVerificationsUseCase.execute());
+    public ResponseEntity<com.donations.donations.dto.PageResponse<VerificationRequest>> getVerifications(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(getVerificationsUseCase.executePaged(page, size));
     }
 
     @GetMapping("/donations")
-    public ResponseEntity<List<Donation>> getDonations() {
-        return ResponseEntity.ok(getDonationsUseCase.execute());
+    public ResponseEntity<com.donations.donations.dto.PageResponse<Donation>> getDonations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(getDonationsUseCase.executePaged(page, size));
     }
 
     @GetMapping("/payouts")
-    public ResponseEntity<List<Payout>> getPayouts() {
-        return ResponseEntity.ok(getPayoutsUseCase.execute());
+    public ResponseEntity<com.donations.donations.dto.PageResponse<Payout>> getPayouts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(getPayoutsUseCase.executePaged(page, size));
     }
 
     @PostMapping("/payouts/{id}/status")
@@ -74,8 +86,11 @@ public class AdminController {
     }
 
     @GetMapping("/reports")
-    public ResponseEntity<List<Report>> getReports() {
-        return ResponseEntity.ok(getReportsUseCase.execute());
+    public ResponseEntity<com.donations.donations.dto.PageResponse<Report>> getReports(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(getReportsUseCase.executePaged(page, size));
     }
 
     @PostMapping("/reports/{id}/status")
@@ -94,7 +109,11 @@ public class AdminController {
     }
 
     @GetMapping("/wallet/transactions")
-    public ResponseEntity<List<WalletTransactionResponseDto>> getWalletTransactions(@RequestParam(required = false) UUID creatorId) {
-        return ResponseEntity.ok(walletService.getAllTransactions(creatorId));
+    public ResponseEntity<com.donations.donations.dto.PageResponse<WalletTransactionResponseDto>> getWalletTransactions(
+            @RequestParam(required = false) UUID creatorId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        return ResponseEntity.ok(walletService.getAllTransactionsPaged(creatorId, page, size));
     }
 }

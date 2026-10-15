@@ -38,7 +38,7 @@ public class VerificationController {
                 .orElse(ResponseEntity.noContent().build());
     }
 
-@PostMapping("/me")
+    @PostMapping("/me")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<VerificationRequest> submit(@RequestBody VerificationRequest request, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return ResponseEntity.ok(submitVerificationUseCase.execute(getCreatorId(userDetails.getId()), request));

@@ -19,12 +19,13 @@ public class NotificationController {
     private final NotificationRepository notificationRepository;
 
     @GetMapping("/me")
-    public ResponseEntity<List<Notification>> getMine(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        // Find all notifications matching userId
-        List<Notification> all = notificationRepository.findAll().stream()
-            .filter(n -> n.getUserId().equals(userDetails.getId()))
-            .collect(Collectors.toList());
-        return ResponseEntity.ok(all);
+    public ResponseEntity<com.donations.donations.dto.PageResponse<Notification>> getMine(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), Math.max(1, size));
+        return ResponseEntity.ok(com.donations.donations.dto.PageResponse.of(notificationRepository.findByUserIdOrderByCreatedAtDesc(userDetails.getId(), pageable)));
     }
 
     @PutMapping("/me/read-all")

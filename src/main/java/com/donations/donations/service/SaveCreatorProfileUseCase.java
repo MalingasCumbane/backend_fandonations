@@ -29,7 +29,7 @@ public class SaveCreatorProfileUseCase {
     @Transactional
     public Creator execute(UUID userId, CreatorProfileRequestDto input) {
         Optional<Creator> existingOpt = creatorRepository.findByUserId(userId);
-        
+
         // If updating username, check uniqueness
         if (input.getUsername() != null && !input.getUsername().isBlank()) {
             Optional<Creator> byUsername = creatorRepository.findByUsername(input.getUsername());
@@ -37,7 +37,7 @@ public class SaveCreatorProfileUseCase {
                 throw new IllegalArgumentException("Username already taken");
             }
         }
-        
+
         Country country = null;
         if (input.getCountry() != null && !input.getCountry().isBlank()) {
             try {
@@ -46,7 +46,7 @@ public class SaveCreatorProfileUseCase {
                 country = countryRepository.findByName(input.getCountry()).orElse(null);
             }
         }
-        
+
         Category category = null;
         if (input.getCategory() != null && !input.getCategory().isBlank()) {
             try {
@@ -55,12 +55,12 @@ public class SaveCreatorProfileUseCase {
                 category = categoryRepository.findByName(input.getCategory()).orElse(null);
             }
         }
-        
+
         Creator creatorToSave;
 
         if (existingOpt.isPresent()) {
             Creator existing = existingOpt.get();
-            
+
             String processedAvatar = processAvatar(existing.getId(), input.getAvatarUrl(), existing.getAvatarUrl());
 
             if (existing.getStatus() == CreatorStatus.VERIFIED) {
@@ -79,7 +79,7 @@ public class SaveCreatorProfileUseCase {
             existing.setFullName(input.getFullName() != null ? input.getFullName() : existing.getFullName());
             existing.setUsername(input.getUsername() != null ? input.getUsername() : existing.getUsername());
             existing.setEmail(input.getEmail() != null ? input.getEmail() : existing.getEmail());
-            
+
             existing.setCountry(country != null ? country : existing.getCountry());
             existing.setCity(input.getCity() != null ? input.getCity() : existing.getCity());
             existing.setCategory(category != null ? category : existing.getCategory());
@@ -91,7 +91,7 @@ public class SaveCreatorProfileUseCase {
             existing.setYoutubeUrl(input.getYoutubeUrl() != null ? input.getYoutubeUrl() : existing.getYoutubeUrl());
             existing.setTiktokUrl(input.getTiktokUrl() != null ? input.getTiktokUrl() : existing.getTiktokUrl());
             existing.setAcceptsMarketing(input.getAcceptsMarketing() != null ? input.getAcceptsMarketing() : existing.isAcceptsMarketing());
-            
+
             creatorToSave = existing;
         } else {
             UUID newCreatorId = UUID.randomUUID();

@@ -104,13 +104,7 @@ public class PdfReceiptGenerator {
 
             // Table Rows
             int y = 560;
-            String[][] rows = new String[][] {
-                {"Referencia da Transacao:", reference},
-                {"Data e Hora da Emissao:", emissionDate},
-                {"Metodo de Pagamento:", paymentMethod},
-                {"Criador Beneficiario:", creatorName},
-                {"Apoiante:", (supporterEmail != null && !supporterEmail.isBlank()) ? supporterEmail : "Anonimo"}
-            };
+            String[][] rows = new String[][]{{"Referencia da Transacao:", reference}, {"Data e Hora da Emissao:", emissionDate}, {"Metodo de Pagamento:", paymentMethod}, {"Criador Beneficiario:", creatorName}, {"Apoiante:", (supporterEmail != null && !supporterEmail.isBlank()) ? supporterEmail : "Anonimo"}};
 
             for (String[] row : rows) {
                 // Background zebra stripe
@@ -197,9 +191,6 @@ public class PdfReceiptGenerator {
 
     private static String escapePdf(String input) {
         if (input == null) return "";
-        return input.replace("\\", "\\\\")
-                    .replace("(", "\\(")
-                    .replace(")", "\\)")
-                    .replaceAll("[^\\x20-\\x7E]", "");
+        return input.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)").replaceAll("[^\\x20-\\x7E]", "");
     }
 }

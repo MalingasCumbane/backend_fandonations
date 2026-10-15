@@ -34,7 +34,7 @@ public class VerifyPhoneOtpUseCase {
         PhoneVerification entity = repository.findFirstByUserIdAndPhoneNumberOrderByCreatedAtDesc(userId, digits)
                 .or(() -> repository.findFirstByUserIdAndPhoneNumberOrderByCreatedAtDesc(userId, rawPhoneNumber))
                 .orElseThrow(() -> new IllegalArgumentException("Nenhum pedido de validação pendente encontrado para este número."));
-                
+
         if (entity.isVerified()) {
             throw new IllegalStateException("Este número já se encontra verificado.");
         }
@@ -42,15 +42,15 @@ public class VerifyPhoneOtpUseCase {
             throw new IllegalStateException("O código de verificação expirou. Por favor solicite um novo.");
         }
         if (!entity.getOtpCode().equals(otp.trim())) {
-            throw new IllegalArgumentException("Código de validação incorreto.");
+            throw new IllegalArgumentException("Os dados introduzidos são incorrectos.");
         }
-        
+
         entity.setVerified(true);
         repository.save(entity);
-        
+
         Creator creator = creatorRepository.findByUserId(userId)
                 .orElseThrow(() -> new IllegalStateException("Perfil de criador não encontrado."));
-                
+
         if (digits.startsWith("84") || digits.startsWith("85")) {
             creator.setMpesaPhone(digits);
         } else if (digits.startsWith("86") || digits.startsWith("87")) {

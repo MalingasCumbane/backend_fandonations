@@ -41,10 +41,10 @@ public class AuthController {
         }
         try {
             User user = getCurrentUserUseCase.execute(userDetails.getId());
-            
+
             String fullName = null;
             String username = null;
-            
+
             try {
                 Optional<Creator> creatorOpt = creatorRepository.findByUserId(user.getId());
                 if (creatorOpt.isPresent()) {
@@ -56,10 +56,11 @@ public class AuthController {
                         username = c.getUsername();
                     }
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
-            String displayName = (fullName != null && !fullName.isBlank()) 
-                    ? fullName 
+            String displayName = (fullName != null && !fullName.isBlank())
+                    ? fullName
                     : ((username != null && !username.isBlank()) ? username : user.getEmail().split("@")[0]);
 
             Map<String, Object> response = new HashMap<>();

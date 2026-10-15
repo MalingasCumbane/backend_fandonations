@@ -1,6 +1,8 @@
 package com.donations.donations.repository;
 
 import com.donations.donations.model.VerificationRequest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -12,4 +14,5 @@ import java.util.UUID;
 public interface VerificationRequestRepository extends JpaRepository<VerificationRequest, UUID> {
     Optional<VerificationRequest> findFirstByCreatorIdOrderByCreatedAtDesc(UUID creatorId);
     List<VerificationRequest> findByCreatorId(UUID creatorId);
+    Page<VerificationRequest> findAllByOrderByCreatedAtDesc(Pageable pageable);
 }

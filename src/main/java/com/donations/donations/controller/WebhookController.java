@@ -33,19 +33,19 @@ public class WebhookController {
         if (!payload.containsKey("output_TransactionReference") || !payload.containsKey("output_ResponseCode")) {
             return ResponseEntity.badRequest().build();
         }
-        
+
         String ref = (String) payload.get("output_TransactionReference");
         String code = (String) payload.get("output_ResponseCode");
         String desc = (String) payload.get("output_ResponseDesc");
-        
+
         Donation donation = donationRepository.findAll().stream().filter(d -> ref.equals(d.getReference())).findFirst().orElse(null);
         if (donation == null) return ResponseEntity.ok().build(); // Ignore unknown
-        
+
         if (donation.getStatus() == DonationStatus.SUCCESS) return ResponseEntity.ok().build(); // Already processed
 
         if ("INS-0".equals(code)) {
             donation.setStatus(DonationStatus.SUCCESS);
-            
+
             // Add to campaign
             Campaign campaign = campaignRepository.findById(donation.getCampaignId()).orElse(null);
             if (campaign != null) {
@@ -53,7 +53,7 @@ public class WebhookController {
                 campaign.setRaisedAmount(campaign.getRaisedAmount().add(donation.getAmount()));
                 campaignRepository.save(campaign);
             }
-            
+
             // Notify creator
             Creator creator = creatorRepository.findById(donation.getCreatorId()).orElse(null);
             if (creator != null) {
@@ -69,7 +69,8 @@ public class WebhookController {
                             "Apoio recebido de " + supporter + (donation.getMethod() != null ? " (" + donation.getMethod().name() + ")" : ""),
                             donation.getCreatedAt() != null ? donation.getCreatedAt() : java.time.LocalDateTime.now()
                     );
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
 
                 notificationRepository.save(Notification.builder()
                         .userId(creator.getUserId())
@@ -82,9 +83,9 @@ public class WebhookController {
             donation.setStatus(DonationStatus.FAILED);
             donation.setFailureReason(desc);
         }
-        
+
         donationRepository.save(donation);
-        
+
         return ResponseEntity.ok().build();
     }
 }

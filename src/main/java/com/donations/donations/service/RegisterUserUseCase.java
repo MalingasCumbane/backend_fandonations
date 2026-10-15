@@ -35,32 +35,17 @@ public class RegisterUserUseCase {
             throw new RuntimeException("Email is already in use");
         }
 
-        User user = User.builder()
-                .email(command.getEmail())
-                .passwordHash(passwordEncoder.encode(command.getPassword()))
-                .role(command.getRole() != null ? command.getRole() : UserRole.CREATOR)
-                .active(false)
-                .build();
+        User user = User.builder().email(command.getEmail()).passwordHash(passwordEncoder.encode(command.getPassword())).role(command.getRole() != null ? command.getRole() : UserRole.CREATOR).active(false).build();
 
         user = userRepository.save(user);
 
         if (user.getRole() == UserRole.CREATOR) {
-            Creator emptyCreator = Creator.builder()
-                .userId(user.getId())
-                .fullName(command.getName())
-                .email(user.getEmail())
-                .username(command.getName().toLowerCase().replaceAll("\\s+", "") + "-" + UUID.randomUUID().toString().substring(0, 5))
-                .status(CreatorStatus.DRAFT)
-                .build();
+            Creator emptyCreator = Creator.builder().userId(user.getId()).fullName(command.getName()).email(user.getEmail()).username(command.getName().toLowerCase().replaceAll("\\s+", "") + "-" + UUID.randomUUID().toString().substring(0, 5)).status(CreatorStatus.DRAFT).build();
             creatorRepository.save(emptyCreator);
         }
 
         String tokenStr = UUID.randomUUID().toString();
-        VerificationToken token = VerificationToken.builder()
-                .token(tokenStr)
-                .userId(user.getId())
-                .expiryDate(LocalDateTime.now().plusHours(24))
-                .build();
+        VerificationToken token = VerificationToken.builder().token(tokenStr).userId(user.getId()).expiryDate(LocalDateTime.now().plusHours(24)).build();
 
         tokenRepository.save(token);
         emailRepository.sendVerificationEmail(user.getEmail(), tokenStr);

@@ -41,8 +41,12 @@ public class CreatorApiController {
     }
 
     @GetMapping("/campaigns/me")
-    public ResponseEntity<List<Campaign>> getCampaigns(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(getCreatorCampaignsUseCase.execute(getCreatorId(userDetails.getId())));
+    public ResponseEntity<com.donations.donations.dto.PageResponse<Campaign>> getCampaigns(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        return ResponseEntity.ok(getCreatorCampaignsUseCase.executePaged(getCreatorId(userDetails.getId()), page, size));
     }
 
     @PostMapping("/campaigns/me")
@@ -64,8 +68,12 @@ public class CreatorApiController {
     }
 
     @GetMapping("/donations/me")
-    public ResponseEntity<List<Donation>> getDonations(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(getCreatorDonationsUseCase.execute(getCreatorId(userDetails.getId())));
+    public ResponseEntity<com.donations.donations.dto.PageResponse<Donation>> getDonations(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        return ResponseEntity.ok(getCreatorDonationsUseCase.executePaged(getCreatorId(userDetails.getId()), page, size));
     }
 
     @GetMapping("/stats/me")
@@ -74,8 +82,12 @@ public class CreatorApiController {
     }
 
     @GetMapping("/payouts/me")
-    public ResponseEntity<List<Payout>> getPayouts(@AuthenticationPrincipal UserDetailsImpl userDetails) {
-        return ResponseEntity.ok(getCreatorPayoutsUseCase.execute(getCreatorId(userDetails.getId())));
+    public ResponseEntity<com.donations.donations.dto.PageResponse<Payout>> getPayouts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @AuthenticationPrincipal UserDetailsImpl userDetails
+    ) {
+        return ResponseEntity.ok(getCreatorPayoutsUseCase.executePaged(getCreatorId(userDetails.getId()), page, size));
     }
 
     @PostMapping("/payouts/me/send-otp")
@@ -112,10 +124,12 @@ public class CreatorApiController {
     }
 
     @GetMapping("/wallet/transactions/me")
-    public ResponseEntity<List<com.donations.donations.dto.creator.WalletTransactionResponseDto>> getMyWalletTransactions(
+    public ResponseEntity<com.donations.donations.dto.PageResponse<com.donations.donations.dto.creator.WalletTransactionResponseDto>> getMyWalletTransactions(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         UUID creatorId = getCreatorId(userDetails.getId());
-        return ResponseEntity.ok(walletService.getTransactionsForCreator(creatorId));
+        return ResponseEntity.ok(walletService.getTransactionsForCreatorPaged(creatorId, page, size));
     }
 }

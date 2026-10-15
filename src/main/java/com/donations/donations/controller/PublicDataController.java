@@ -37,9 +37,28 @@ public class PublicDataController {
 
     // Controllers will be implemented here. For now, returning empty to allow compiling and check.
     @GetMapping("/creators")
-    public List<PublicCreator> getCreators(@RequestParam(required = false) String q, @RequestParam(required = false) String category) {
-        return creatorJpaRepository.findAll().stream()
+    public com.donations.donations.dto.PageResponse<PublicCreator> getCreators(
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) String category,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "12") int size
+    ) {
+        String queryLower = q != null ? q.trim().toLowerCase() : null;
+        String catLower = category != null && !category.equalsIgnoreCase("Todos") ? category.trim().toLowerCase() : null;
+
+        List<PublicCreator> all = creatorJpaRepository.findAll().stream()
                 .filter(c -> c.getStatus() != null && c.getStatus().name().equals("VERIFIED"))
+                .filter(c -> {
+                    if (catLower == null || catLower.isBlank()) return true;
+                    return c.getCategory() != null && c.getCategory().getName() != null && c.getCategory().getName().toLowerCase().contains(catLower);
+                })
+                .filter(c -> {
+                    if (queryLower == null || queryLower.isBlank()) return true;
+                    String fullName = c.getFullName() != null ? c.getFullName().toLowerCase() : "";
+                    String username = c.getUsername() != null ? c.getUsername().toLowerCase() : "";
+                    String bio = c.getBio() != null ? c.getBio().toLowerCase() : "";
+                    return fullName.contains(queryLower) || username.contains(queryLower) || bio.contains(queryLower);
+                })
                 .map(c -> PublicCreator.builder()
                         .id(c.getId())
                         .username(c.getUsername())
@@ -47,8 +66,20 @@ public class PublicDataController {
                         .category(c.getCategory() != null ? c.getCategory().getName() : null)
                         .bio(c.getBio())
                         .country(c.getCountry() != null ? c.getCountry().getName() : null)
+                        .avatarUrl(c.getAvatarUrl())
+                        .status(c.getStatus())
+                        .createdAt(c.getCreatedAt())
+                        .socials(PublicCreator.Socials.builder()
+                                .facebook(c.getFacebookUrl())
+                                .twitter(c.getTwitterUrl())
+                                .instagram(c.getInstagramUrl())
+                                .youtube(c.getYoutubeUrl())
+                                .tiktok(c.getTiktokUrl())
+                                .build())
                         .build())
                 .collect(Collectors.toList());
+
+        return com.donations.donations.dto.PageResponse.of(all, page, size);
     }
 
     @GetMapping("/creators/{username}")
@@ -59,7 +90,7 @@ public class PublicDataController {
                     if (c.getStatus() == null || !c.getStatus().name().equals("VERIFIED")) {
                         throw new java.util.NoSuchElementException("Creator not found");
                     }
-                    
+
                     PublicCreator publicCreator = PublicCreator.builder()
                             .id(c.getId())
                             .userId(c.getUserId())
@@ -79,7 +110,7 @@ public class PublicDataController {
                                     .tiktok(c.getTiktokUrl())
                                     .build())
                             .build();
-                            
+
                     List<Campaign> campaigns = campaignRepository.findByCreatorId(c.getId()).stream()
                             .filter(camp -> camp.getStatus() != null && camp.getStatus().name().equals("ACTIVE"))
                             .collect(Collectors.toList());
@@ -125,7 +156,6 @@ public class PublicDataController {
     public List<Category> getCategories() {
         return categoryRepository.findAll();
     }
-
 
 
     @PostMapping("/donations")

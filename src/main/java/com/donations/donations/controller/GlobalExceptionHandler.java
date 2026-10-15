@@ -12,6 +12,13 @@ import java.util.Map;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
+    @ExceptionHandler(org.springframework.security.core.AuthenticationException.class)
+    public ResponseEntity<Map<String, String>> handleAuthenticationException(org.springframework.security.core.AuthenticationException ex) {
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Os dados introduzidos são incorrectos.");
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, String>> handleIllegalArgumentException(IllegalArgumentException ex) {
         Map<String, String> response = new HashMap<>();
@@ -44,7 +51,14 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleGenericException(Exception ex) {
         ex.printStackTrace();
         Map<String, String> response = new HashMap<>();
-        response.put("message", ex.getMessage() != null ? ex.getMessage() : "Erro interno no servidor.");
+        String msg = ex.getMessage();
+        if (msg != null && (msg.toLowerCase().contains("bad credentials") || msg.toLowerCase().contains("credentials"))) {
+            msg = "Os dados introduzidos são incorrectos.";
+            return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
+        } else if (msg == null || msg.isBlank()) {
+            msg = "Erro interno no servidor.";
+        }
+        response.put("message", msg);
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 }

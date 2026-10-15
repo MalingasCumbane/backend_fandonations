@@ -51,7 +51,7 @@ public class SecurityOtpService {
         }
 
         if (!entity.getOtpCode().equals(otp.trim())) {
-            throw new IllegalArgumentException("Código de verificação incorreto.");
+            throw new IllegalArgumentException("Os dados introduzidos são incorrectos.");
         }
 
         entity.setUsed(true);

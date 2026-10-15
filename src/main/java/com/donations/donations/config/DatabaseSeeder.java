@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+
 import com.donations.donations.model.User;
 import com.donations.donations.model.VerificationToken;
 import com.donations.donations.model.UserRole;
@@ -19,8 +20,10 @@ import com.donations.donations.model.PlatformSettings;
 import com.donations.donations.repository.PlatformSettingsRepository;
 import com.donations.donations.repository.*;
 import org.springframework.beans.factory.annotation.Value;
+
 import java.math.BigDecimal;
 import java.util.UUID;
+
 import org.springframework.core.annotation.Order;
 
 
@@ -78,9 +81,9 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         if (categoryRepository.count() == 0) {
             List<String> cats = List.of(
-                "Influencer", "Tiktoker", "Youtuber", "Jornalismo", "Música", "Entretenimento"
+                    "Influencer", "Tiktoker", "Youtuber", "Jornalismo", "Música", "Entretenimento"
             );
-            
+
             for (String c : cats) {
                 Category ent = new Category();
                 ent.setName(c);
@@ -90,14 +93,14 @@ public class DatabaseSeeder implements CommandLineRunner {
 
         if (countryRepository.count() == 0) {
             List<String[]> countries = List.of(
-                new String[]{"Moçambique", "MZ", "+258"},
-                new String[]{"África do Sul", "ZA", "+27"},
-                new String[]{"Senegal", "SN", "+221"},
-                new String[]{"Botswana", "BW", "+267"},
-                new String[]{"USA", "US", "+1"},
-                new String[]{"Canada", "CA", "+1"}
+                    new String[]{"Moçambique", "MZ", "+258"},
+                    new String[]{"África do Sul", "ZA", "+27"},
+                    new String[]{"Senegal", "SN", "+221"},
+                    new String[]{"Botswana", "BW", "+267"},
+                    new String[]{"USA", "US", "+1"},
+                    new String[]{"Canada", "CA", "+1"}
             );
-            
+
             for (String[] c : countries) {
                 Country ent = new Country();
                 ent.setName(c[0]);

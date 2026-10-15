@@ -18,9 +18,7 @@ public class RabbitMQConfig {
 
     @Bean
     public Queue emailQueue() {
-        return org.springframework.amqp.core.QueueBuilder.durable(EMAIL_QUEUE)
-                .withArgument("x-dead-letter-exchange", "email_dead_letter_exchange")
-                .build();
+        return org.springframework.amqp.core.QueueBuilder.durable(EMAIL_QUEUE).withArgument("x-dead-letter-exchange", "email_dead_letter_exchange").build();
     }
 
     @Bean
@@ -36,8 +34,7 @@ public class RabbitMQConfig {
     @Bean
     public MessageConverter jsonMessageConverter() {
         Jackson2JsonMessageConverter converter = new Jackson2JsonMessageConverter();
-        org.springframework.amqp.support.converter.DefaultJackson2JavaTypeMapper typeMapper = 
-            new org.springframework.amqp.support.converter.DefaultJackson2JavaTypeMapper();
+        org.springframework.amqp.support.converter.DefaultJackson2JavaTypeMapper typeMapper = new org.springframework.amqp.support.converter.DefaultJackson2JavaTypeMapper();
         typeMapper.setTrustedPackages("*");
         converter.setJavaTypeMapper(typeMapper);
         return converter;

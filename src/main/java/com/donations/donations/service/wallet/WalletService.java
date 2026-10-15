@@ -105,6 +105,22 @@ public class WalletService {
     }
 
     @Transactional
+    public com.donations.donations.dto.PageResponse<WalletTransactionResponseDto> getTransactionsForCreatorPaged(UUID creatorId, int page, int size) {
+        if (walletTransactionRepository.countByCreatorId(creatorId) == 0) {
+            backfillHistory(creatorId);
+        }
+
+        Creator creator = creatorRepository.findById(creatorId).orElse(null);
+        String username = creator != null ? creator.getUsername() : "";
+        String fullName = creator != null ? (creator.getFullName() != null ? creator.getFullName() : creator.getUsername()) : "";
+
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), Math.max(1, size));
+        org.springframework.data.domain.Page<WalletTransaction> pageResult = walletTransactionRepository.findByCreatorIdOrderByCreatedAtDesc(creatorId, pageable);
+
+        return com.donations.donations.dto.PageResponse.of(pageResult, tx -> toDto(tx, username, fullName));
+    }
+
+    @Transactional
     public List<WalletTransactionResponseDto> getAllTransactions(UUID optionalCreatorId) {
         if (optionalCreatorId != null) {
             return getTransactionsForCreator(optionalCreatorId);
@@ -127,6 +143,32 @@ public class WalletService {
                     return toDto(tx, username, fullName);
                 })
                 .collect(Collectors.toList());
+    }
+
+    @Transactional
+    public com.donations.donations.dto.PageResponse<WalletTransactionResponseDto> getAllTransactionsPaged(UUID optionalCreatorId, int page, int size) {
+        if (optionalCreatorId != null) {
+            return getTransactionsForCreatorPaged(optionalCreatorId, page, size);
+        }
+
+        List<Creator> allCreators = creatorRepository.findAll();
+        Map<UUID, Creator> creatorMap = allCreators.stream().collect(Collectors.toMap(Creator::getId, c -> c));
+
+        for (Creator c : allCreators) {
+            if (walletTransactionRepository.countByCreatorId(c.getId()) == 0) {
+                backfillHistory(c.getId());
+            }
+        }
+
+        org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), Math.max(1, size));
+        org.springframework.data.domain.Page<WalletTransaction> pageResult = walletTransactionRepository.findAllByOrderByCreatedAtDesc(pageable);
+
+        return com.donations.donations.dto.PageResponse.of(pageResult, tx -> {
+            Creator c = creatorMap.get(tx.getCreatorId());
+            String username = c != null ? c.getUsername() : "";
+            String fullName = c != null ? (c.getFullName() != null ? c.getFullName() : c.getUsername()) : "";
+            return toDto(tx, username, fullName);
+        });
     }
 
     @Transactional
