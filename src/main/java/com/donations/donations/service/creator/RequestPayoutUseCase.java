@@ -35,7 +35,7 @@ public class RequestPayoutUseCase {
     private final EmailRepository emailRepository;
     private final com.donations.donations.service.wallet.WalletService walletService;
 
-    @Value("${app.admin.email:mcumbane@speranza.co.mz}")
+    @Value("${app.admin.email}")
     private String adminEmail;
 
     public record PayoutValidationResult(
@@ -44,7 +44,8 @@ public class RequestPayoutUseCase {
             BigDecimal feeAmount,
             BigDecimal totalRequired,
             PlatformSettings settings
-    ) {}
+    ) {
+    }
 
     public PayoutValidationResult validatePayoutRequest(UUID creatorId, BigDecimal amount, PaymentMethod method, String phone) {
         if (amount == null || amount.compareTo(BigDecimal.ZERO) <= 0) {
@@ -86,8 +87,8 @@ public class RequestPayoutUseCase {
 
         BigDecimal available = totalReceived.subtract(paidOut);
 
-        BigDecimal feePercentage = settings.getPlatformFeePercentage() != null 
-                ? settings.getPlatformFeePercentage() 
+        BigDecimal feePercentage = settings.getPlatformFeePercentage() != null
+                ? settings.getPlatformFeePercentage()
                 : new BigDecimal("10.00");
         BigDecimal feeAmount = amount.multiply(feePercentage).divide(new BigDecimal("100"), 2, java.math.RoundingMode.HALF_UP);
         BigDecimal totalRequired = amount.add(feeAmount);
@@ -142,8 +143,8 @@ public class RequestPayoutUseCase {
         String digits = val.digits();
         BigDecimal feeAmount = val.feeAmount();
         BigDecimal totalRequired = val.totalRequired();
-        BigDecimal feePercentage = val.settings().getPlatformFeePercentage() != null 
-                ? val.settings().getPlatformFeePercentage() 
+        BigDecimal feePercentage = val.settings().getPlatformFeePercentage() != null
+                ? val.settings().getPlatformFeePercentage()
                 : new BigDecimal("10.00");
 
         Payout payout = Payout.builder()
@@ -184,7 +185,10 @@ public class RequestPayoutUseCase {
             System.err.println("Erro ao registar débitos na carteira para o levantamento: " + e.getMessage());
         }
 
-        try { realtimeEventPublisher.notifyAdminPayouts(saved); } catch (Exception ignored) {}
+        try {
+            realtimeEventPublisher.notifyAdminPayouts(saved);
+        } catch (Exception ignored) {
+        }
 
         // Enviar email de notificação a todos os administradores da plataforma e ao Criador
         try {

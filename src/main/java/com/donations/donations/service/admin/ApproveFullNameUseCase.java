@@ -16,8 +16,7 @@ public class ApproveFullNameUseCase {
     private final CreatorRepository creatorRepository;
 
     public Creator execute(UUID id) {
-        Creator creator = creatorRepository.findAll().stream().filter(c -> c.getId().equals(id)).findFirst()
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Creator not found"));
+        Creator creator = creatorRepository.findAll().stream().filter(c -> c.getId().equals(id)).findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Creator not found"));
 
         if (creator.getRequestedFullName() != null) {
             creator.setFullName(creator.getRequestedFullName());

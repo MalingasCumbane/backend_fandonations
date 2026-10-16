@@ -38,7 +38,7 @@ public class EmailDeliveryService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("malingascumbane1@gmail.com", "Txopa Moçambique");
+            helper.setFrom("malingascumbane1@gmail.com", "Txopa");
             helper.setTo(event.getToEmail());
             helper.setSubject(event.getSubject());
             helper.setText(event.getBody(), true);
@@ -51,7 +51,7 @@ public class EmailDeliveryService {
             mailSender.send(message);
             log.info("[Email] Email enviado com sucesso via SMTP para '{}' | Assunto: '{}'", event.getToEmail(), event.getSubject());
         } catch (Exception e) {
-            log.error("[Email ERROR] Falha ao enviar email via SMTP para '{}' | Assunto: '{}' | Erro: {}", 
+            log.error("[Email ERROR] Falha ao enviar email via SMTP para '{}' | Assunto: '{}' | Erro: {}",
                     event.getToEmail(), event.getSubject(), e.getMessage(), e);
         }
     }

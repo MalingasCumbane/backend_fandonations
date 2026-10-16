@@ -17,20 +17,18 @@ public class CancelVerificationUseCase {
     private final CreatorRepository creatorRepository;
 
     public void execute(UUID creatorId) {
-        Creator creator = creatorRepository.findById(creatorId)
-                .orElseThrow(() -> new IllegalArgumentException("Creator not found"));
-        
-        verificationRepository.findFirstByCreatorIdOrderByCreatedAtDesc(creatorId)
-            .ifPresent(req -> {
-                if (req.getStatus() == VerificationRequestStatus.PENDING_REQUEST) {
-                    verificationRepository.delete(req);
-                    if (creator.getStatus() == CreatorStatus.PENDING_VERIFICATION) {
-                        creator.setStatus(CreatorStatus.DRAFT);
-                        creatorRepository.save(creator);
-                    }
-                } else {
-                    throw new IllegalStateException("Apenas pedidos pendentes podem ser cancelados.");
+        Creator creator = creatorRepository.findById(creatorId).orElseThrow(() -> new IllegalArgumentException("Creator not found"));
+
+        verificationRepository.findFirstByCreatorIdOrderByCreatedAtDesc(creatorId).ifPresent(req -> {
+            if (req.getStatus() == VerificationRequestStatus.PENDING_REQUEST) {
+                verificationRepository.delete(req);
+                if (creator.getStatus() == CreatorStatus.PENDING_VERIFICATION) {
+                    creator.setStatus(CreatorStatus.DRAFT);
+                    creatorRepository.save(creator);
                 }
-            });
+            } else {
+                throw new IllegalStateException("Apenas pedidos pendentes podem ser cancelados.");
+            }
+        });
     }
 }

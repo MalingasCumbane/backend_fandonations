@@ -97,25 +97,7 @@ public class SaveCreatorProfileUseCase {
             UUID newCreatorId = UUID.randomUUID();
             String processedAvatar = processAvatar(newCreatorId, input.getAvatarUrl(), null);
 
-            creatorToSave = Creator.builder()
-                    .id(newCreatorId)
-                    .userId(userId)
-                    .fullName(input.getFullName())
-                    .username(input.getUsername())
-                    .email(input.getEmail())
-                    .country(country)
-                    .city(input.getCity())
-                    .category(category)
-                    .bio(input.getBio())
-                    .avatarUrl(processedAvatar)
-                    .facebookUrl(input.getFacebookUrl())
-                    .twitterUrl(input.getTwitterUrl())
-                    .instagramUrl(input.getInstagramUrl())
-                    .youtubeUrl(input.getYoutubeUrl())
-                    .tiktokUrl(input.getTiktokUrl())
-                    .acceptsMarketing(input.getAcceptsMarketing() != null ? input.getAcceptsMarketing() : false)
-                    .status(CreatorStatus.DRAFT)
-                    .build();
+            creatorToSave = Creator.builder().id(newCreatorId).userId(userId).fullName(input.getFullName()).username(input.getUsername()).email(input.getEmail()).country(country).city(input.getCity()).category(category).bio(input.getBio()).avatarUrl(processedAvatar).facebookUrl(input.getFacebookUrl()).twitterUrl(input.getTwitterUrl()).instagramUrl(input.getInstagramUrl()).youtubeUrl(input.getYoutubeUrl()).tiktokUrl(input.getTiktokUrl()).acceptsMarketing(input.getAcceptsMarketing() != null ? input.getAcceptsMarketing() : false).status(CreatorStatus.DRAFT).build();
         }
 
         return creatorRepository.save(creatorToSave);

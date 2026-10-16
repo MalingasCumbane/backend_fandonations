@@ -4,7 +4,9 @@ import com.donations.donations.repository.CreatorRepository;
 import com.donations.donations.repository.NotificationRepository;
 import com.donations.donations.repository.VerificationRequestRepository;
 import com.donations.donations.model.enums.VerificationRequestStatus;
+
 import java.time.LocalDateTime;
+
 import com.donations.donations.model.Creator;
 import com.donations.donations.model.CreatorStatus;
 import com.donations.donations.model.Notification;
@@ -12,7 +14,9 @@ import com.donations.donations.repository.UserRepository;
 import com.donations.donations.repository.EmailRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.util.UUID;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -21,15 +25,15 @@ import org.springframework.web.server.ResponseStatusException;
 public class ReviewCreatorUseCase {
     private final CreatorRepository creatorRepository;
     private final NotificationRepository notificationRepository;
-        private final VerificationRequestRepository verificationRequestRepository;
+    private final VerificationRequestRepository verificationRequestRepository;
     private final UserRepository userRepository;
     private final com.donations.donations.service.realtime.RealtimeEventPublisher realtimeEventPublisher;
     private final EmailRepository emailRepository;
 
     public Creator execute(UUID id, CreatorStatus status, String adminNote) {
         Creator creator = creatorRepository.findAll().stream().filter(c -> c.getId().equals(id)).findFirst()
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Creator not found"));
-        
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Creator not found"));
+
         creator.setStatus(status);
         if (adminNote != null) creator.setAdminNote(adminNote);
         if (status == CreatorStatus.REJECTED && adminNote != null) {
@@ -43,7 +47,8 @@ public class ReviewCreatorUseCase {
             realtimeEventPublisher.notifyCreatorDonation(creator.getId(), statusEvent);
             realtimeEventPublisher.notifyPublicCreator(creator.getUsername(), java.util.Map.of("type", "CREATOR_STATUS_CHANGED", "status", status.name()));
             realtimeEventPublisher.notifyAdminCreators(creator);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
 
         // Update VerificationRequest if pending
         verificationRequestRepository.findFirstByCreatorIdOrderByCreatedAtDesc(creator.getId()).ifPresent(req -> {

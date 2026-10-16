@@ -14,9 +14,6 @@ public class GetPublicStatsUseCase {
     private final DonationRepository donationRepository;
 
     public Map<String, Object> execute() {
-        return Map.of(
-                "totalCreators", creatorRepository.findAll().size(),
-                "totalDonations", 0
-        );
+        return Map.of("totalCreators", creatorRepository.findAll().size(), "totalDonations", 0);
     }
 }

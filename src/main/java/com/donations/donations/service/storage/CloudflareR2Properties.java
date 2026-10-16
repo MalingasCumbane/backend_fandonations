@@ -47,11 +47,7 @@ public class CloudflareR2Properties {
     }
 
     public boolean isConfigured() {
-        return enabled &&
-                accountId != null && !accountId.isBlank() &&
-                accessKeyId != null && !accessKeyId.isBlank() &&
-                secretAccessKey != null && !secretAccessKey.isBlank() &&
-                bucketName != null && !bucketName.isBlank();
+        return enabled && accountId != null && !accountId.isBlank() && accessKeyId != null && !accessKeyId.isBlank() && secretAccessKey != null && !secretAccessKey.isBlank() && bucketName != null && !bucketName.isBlank();
     }
 
     public boolean isEnabled() {

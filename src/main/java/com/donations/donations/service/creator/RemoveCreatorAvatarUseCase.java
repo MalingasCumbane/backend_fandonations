@@ -20,8 +20,7 @@ public class RemoveCreatorAvatarUseCase {
 
     @Transactional
     public void execute(UUID userId) {
-        Creator creator = creatorRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("Perfil de criador não encontrado"));
+        Creator creator = creatorRepository.findByUserId(userId).orElseThrow(() -> new IllegalArgumentException("Perfil de criador não encontrado"));
 
         String oldUrl = creator.getAvatarUrl();
         if (oldUrl != null && !oldUrl.isBlank()) {

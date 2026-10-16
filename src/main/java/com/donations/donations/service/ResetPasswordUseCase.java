@@ -32,8 +32,7 @@ public class ResetPasswordUseCase {
             throw new IllegalArgumentException("A nova palavra-passe deve ter no mínimo 6 caracteres.");
         }
 
-        PasswordResetToken token = passwordResetTokenRepository.findByToken(command.getToken().trim())
-                .orElseThrow(() -> new IllegalArgumentException("Link de recuperação inválido ou inexistente."));
+        PasswordResetToken token = passwordResetTokenRepository.findByToken(command.getToken().trim()).orElseThrow(() -> new IllegalArgumentException("Link de recuperação inválido ou inexistente."));
 
         if (token.isUsed()) {
             throw new IllegalStateException("Este link de recuperação já foi utilizado. Solicite um novo.");
@@ -43,8 +42,7 @@ public class ResetPasswordUseCase {
             throw new IllegalStateException("Este link de recuperação expirou. Por favor solicite um novo.");
         }
 
-        User user = userRepository.findById(token.getUserId())
-                .orElseThrow(() -> new IllegalStateException("Utilizador associado ao token não encontrado."));
+        User user = userRepository.findById(token.getUserId()).orElseThrow(() -> new IllegalStateException("Utilizador associado ao token não encontrado."));
 
         user.setPasswordHash(passwordEncoder.encode(command.getNewPassword().trim()));
         user.setActive(true);

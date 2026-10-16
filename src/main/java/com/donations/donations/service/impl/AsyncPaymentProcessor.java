@@ -85,19 +85,19 @@ public class AsyncPaymentProcessor {
                 Notification notification = Notification.builder()
                         .userId(creator.getUserId())
                         .title("Nova Doação!")
-                        .body("Recebeu uma doação de " + donation.getAmount() + " MZN de " + 
-                              (donation.isAnonymous() ? "Anónimo" : (donation.getSupporterName() != null ? donation.getSupporterName() : "Anónimo")))
+                        .body("Recebeu uma doação de " + donation.getAmount() + " MZN de " +
+                                (donation.isAnonymous() ? "Anónimo" : (donation.getSupporterName() != null ? donation.getSupporterName() : "Anónimo")))
                         .isRead(false)
                         .build();
                 notificationRepository.save(notification);
-                
+
                 if (donation.getSupporterEmail() != null && !donation.getSupporterEmail().isEmpty()) {
                     emailRepository.sendDonationReceiptEmail(
-                        donation.getSupporterEmail(), 
-                        creator.getFullName(), 
-                        donation.getAmount().toString(), 
-                        donation.getReference(),
-                        donation.getMethod() != null ? donation.getMethod().name() : "M-Pesa / e-Mola"
+                            donation.getSupporterEmail(),
+                            creator.getFullName(),
+                            donation.getAmount().toString(),
+                            donation.getReference(),
+                            donation.getMethod() != null ? donation.getMethod().name() : "M-Pesa / e-Mola"
                     );
                 }
 

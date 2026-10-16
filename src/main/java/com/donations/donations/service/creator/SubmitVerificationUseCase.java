@@ -25,7 +25,7 @@ public class SubmitVerificationUseCase {
     public VerificationRequest execute(UUID creatorId, VerificationRequest request) {
         Creator creator = creatorRepository.findById(creatorId)
                 .orElseThrow(() -> new IllegalArgumentException("Creator not found"));
-                
+
         // creator status remains as is until approved
         creator.setRequestedFullName(request.getFullName());
         creator.setSubmittedAt(LocalDateTime.now());

@@ -17,8 +17,7 @@ public class ReviewReportUseCase {
     private final ReportRepository reportRepository;
 
     public Report execute(UUID id, ReportStatus status) {
-        Report report = reportRepository.findById(id)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found"));
+        Report report = reportRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Report not found"));
 
         report.setStatus(status);
         return reportRepository.save(report);

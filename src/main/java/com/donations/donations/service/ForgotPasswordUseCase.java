@@ -47,12 +47,7 @@ public class ForgotPasswordUseCase {
         }
 
         String tokenStr = UUID.randomUUID().toString();
-        PasswordResetToken token = PasswordResetToken.builder()
-                .token(tokenStr)
-                .userId(user.getId())
-                .expiryDate(LocalDateTime.now().plusHours(1))
-                .used(false)
-                .build();
+        PasswordResetToken token = PasswordResetToken.builder().token(tokenStr).userId(user.getId()).expiryDate(LocalDateTime.now().plusHours(1)).used(false).build();
 
         passwordResetTokenRepository.save(token);
         emailRepository.sendPasswordResetEmail(user.getEmail(), tokenStr);

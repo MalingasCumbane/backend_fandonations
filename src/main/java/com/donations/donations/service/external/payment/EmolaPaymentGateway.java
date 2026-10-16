@@ -25,10 +25,6 @@ public class EmolaPaymentGateway implements PaymentGatewayRepository {
 
         log.info("Attempting e-Mola charge for amount {} to phone {}", request.getAmount(), request.getPhone());
         // Simulating a successful transaction as requested by the user
-        return PaymentResult.builder()
-                .success(true)
-                .transactionReference("EMOLA-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase())
-                .rawResponse("{\"status\":\"SUCCESS\"}")
-                .build();
+        return PaymentResult.builder().success(true).transactionReference("EMOLA-" + java.util.UUID.randomUUID().toString().substring(0, 8).toUpperCase()).rawResponse("{\"status\":\"SUCCESS\"}").build();
     }
 }

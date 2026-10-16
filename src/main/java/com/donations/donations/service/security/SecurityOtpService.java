@@ -20,14 +20,7 @@ public class SecurityOtpService {
     public String generateAndSaveOtp(UUID userId, String purpose, String targetInfo) {
         String otp = String.format("%06d", new Random().nextInt(1000000));
 
-        SecurityOtp entity = SecurityOtp.builder()
-                .userId(userId)
-                .purpose(purpose)
-                .targetInfo(targetInfo)
-                .otpCode(otp)
-                .expiresAt(LocalDateTime.now().plusMinutes(10))
-                .used(false)
-                .build();
+        SecurityOtp entity = SecurityOtp.builder().userId(userId).purpose(purpose).targetInfo(targetInfo).otpCode(otp).expiresAt(LocalDateTime.now().plusMinutes(10)).used(false).build();
 
         repository.save(entity);
         return otp;
@@ -39,8 +32,7 @@ public class SecurityOtpService {
             throw new IllegalArgumentException("O código OTP é obrigatório.");
         }
 
-        SecurityOtp entity = repository.findFirstByUserIdAndPurposeAndUsedFalseOrderByCreatedAtDesc(userId, purpose)
-                .orElseThrow(() -> new IllegalArgumentException("Nenhum código de verificação pendente encontrado. Solicite um novo código."));
+        SecurityOtp entity = repository.findFirstByUserIdAndPurposeAndUsedFalseOrderByCreatedAtDesc(userId, purpose).orElseThrow(() -> new IllegalArgumentException("Nenhum código de verificação pendente encontrado. Solicite um novo código."));
 
         if (entity.isUsed()) {
             throw new IllegalStateException("Este código de verificação já foi utilizado.");

@@ -15,7 +15,6 @@ public class GetCurrentUserUseCase {
     private final UserRepository userRepository;
 
     public User execute(UUID userId) {
-        return userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        return userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
     }
 }

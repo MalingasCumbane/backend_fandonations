@@ -22,15 +22,13 @@ public class VerifyEmailUseCase {
 
     @Transactional
     public void execute(String tokenStr) {
-        VerificationToken token = tokenRepository.findByToken(tokenStr)
-                .orElseThrow(() -> new IllegalArgumentException("Os dados introduzidos são incorrectos."));
+        VerificationToken token = tokenRepository.findByToken(tokenStr).orElseThrow(() -> new IllegalArgumentException("Os dados introduzidos são incorrectos."));
 
         if (token.getExpiryDate().isBefore(java.time.LocalDateTime.now())) {
             throw new IllegalStateException("O link de verificação expirou. Por favor, solicite um novo.");
         }
 
-        User user = userRepository.findById(token.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        User user = userRepository.findById(token.getUserId()).orElseThrow(() -> new RuntimeException("User not found"));
 
         user.setActive(true);
         userRepository.save(user);

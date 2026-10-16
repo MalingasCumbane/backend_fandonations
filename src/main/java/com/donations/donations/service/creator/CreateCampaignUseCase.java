@@ -4,6 +4,7 @@ import com.donations.donations.repository.CampaignRepository;
 import com.donations.donations.model.Campaign;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+
 import java.time.LocalDateTime;
 
 @Service
@@ -15,7 +16,10 @@ public class CreateCampaignUseCase {
     public Campaign execute(Campaign campaign) {
         campaign.setStartDate(java.time.LocalDate.now());
         Campaign saved = campaignRepository.save(campaign);
-        try { realtimeEventPublisher.notifyCreatorCampaign(saved.getCreatorId(), saved); } catch (Exception ignored) {}
+        try {
+            realtimeEventPublisher.notifyCreatorCampaign(saved.getCreatorId(), saved);
+        } catch (Exception ignored) {
+        }
         return saved;
     }
 }

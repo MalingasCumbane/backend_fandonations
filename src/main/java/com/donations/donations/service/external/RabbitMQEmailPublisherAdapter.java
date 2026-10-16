@@ -15,7 +15,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
     private final RabbitTemplate rabbitTemplate;
     private final EmailDeliveryService emailDeliveryService;
 
-    @Value("${app.frontend.url:https://txopa.app}")
+    @Value("${app.frontend.url}")
     private String frontendUrl;
 
     private void dispatch(EmailEvent event) {
@@ -252,76 +252,76 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
         byte[] pdfReceipt = null;
         try {
             pdfReceipt = com.donations.donations.util.PdfReceiptGenerator.generateReceipt(
-                toEmail, creatorName, amount, reference, method
+                    toEmail, creatorName, amount, reference, method
             );
         } catch (Exception e) {
             System.err.println("Erro ao gerar PDF de recibo: " + e.getMessage());
         }
 
         String htmlBody = """
-        <!DOCTYPE html>
-        <html lang="pt">
-        <head>
-            <meta charset="utf-8">
-            <style>
-                body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 30px; color: #0f172a; }
-                .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
-                .header { background: #0f172a; padding: 28px 32px; color: #ffffff; }
-                .header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
-                .header p { margin: 4px 0 0; font-size: 12px; color: #94a3b8; }
-                .content { padding: 32px; }
-                .badge { display: inline-block; background: #ecfdf5; color: #065f46; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 9999px; margin-bottom: 16px; border: 1px solid #a7f3d0; }
-                .title { font-size: 20px; font-weight: 700; margin: 0 0 8px; color: #0f172a; }
-                .desc { font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 24px; }
-                .receipt-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
-                .pdf-notice { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 24px; }
-                .footer { padding: 20px 32px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <div class="header">
-                    <h1>Txopa</h1>
-                    <p>Plataforma Oficial de Apoio a Criadores de Mocambique</p>
-                </div>
-                <div class="content">
-                    <span class="badge">PAGAMENTO CONFIRMADO</span>
-                    <h2 class="title">Obrigado pelo seu apoio!</h2>
-                    <p class="desc">A sua contribuicao para <strong>%s</strong> foi confirmada e creditada com sucesso.</p>
-
-                    <div class="receipt-box">
-                        <table style="width: 100%%; border-collapse: collapse;">
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Referencia:</td>
-                                <td style="padding: 6px 0; font-weight: 600; color: #0f172a; text-align: right; font-size: 13px;">%s</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Beneficiario:</td>
-                                <td style="padding: 6px 0; font-weight: 600; color: #0f172a; text-align: right; font-size: 13px;">%s</td>
-                            </tr>
-                            <tr style="border-bottom: 1px solid #f1f5f9;">
-                                <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Metodo:</td>
-                                <td style="padding: 6px 0; font-weight: 600; color: #0f172a; text-align: right; font-size: 13px;">%s</td>
-                            </tr>
-                            <tr style="border-top: 2px dashed #cbd5e1;">
-                                <td style="padding: 10px 0 0; font-weight: 600; color: #0f172a; font-size: 14px;">Valor Total:</td>
-                                <td style="padding: 10px 0 0; font-weight: 700; color: #059669; text-align: right; font-size: 18px;">%s MT</td>
-                            </tr>
-                        </table>
+                <!DOCTYPE html>
+                <html lang="pt">
+                <head>
+                    <meta charset="utf-8">
+                    <style>
+                        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: #f8fafc; margin: 0; padding: 30px; color: #0f172a; }
+                        .card { max-width: 580px; margin: 0 auto; background: #ffffff; border-radius: 12px; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05); }
+                        .header { background: #0f172a; padding: 28px 32px; color: #ffffff; }
+                        .header h1 { margin: 0; font-size: 22px; font-weight: 700; letter-spacing: 0.5px; }
+                        .header p { margin: 4px 0 0; font-size: 12px; color: #94a3b8; }
+                        .content { padding: 32px; }
+                        .badge { display: inline-block; background: #ecfdf5; color: #065f46; font-size: 12px; font-weight: 600; padding: 4px 10px; border-radius: 9999px; margin-bottom: 16px; border: 1px solid #a7f3d0; }
+                        .title { font-size: 20px; font-weight: 700; margin: 0 0 8px; color: #0f172a; }
+                        .desc { font-size: 14px; line-height: 1.6; color: #475569; margin: 0 0 24px; }
+                        .receipt-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
+                        .pdf-notice { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; padding: 12px 16px; font-size: 13px; color: #1e40af; margin-bottom: 24px; }
+                        .footer { padding: 20px 32px; background: #f8fafc; border-top: 1px solid #e2e8f0; font-size: 11px; color: #94a3b8; text-align: center; }
+                    </style>
+                </head>
+                <body>
+                    <div class="card">
+                        <div class="header">
+                            <h1>Txopa</h1>
+                            <p>Plataforma Oficial de Apoio a Criadores de Mocambique</p>
+                        </div>
+                        <div class="content">
+                            <span class="badge">PAGAMENTO CONFIRMADO</span>
+                            <h2 class="title">Obrigado pelo seu apoio!</h2>
+                            <p class="desc">A sua contribuicao para <strong>%s</strong> foi confirmada e creditada com sucesso.</p>
+                
+                            <div class="receipt-box">
+                                <table style="width: 100%%; border-collapse: collapse;">
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Referencia:</td>
+                                        <td style="padding: 6px 0; font-weight: 600; color: #0f172a; text-align: right; font-size: 13px;">%s</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Beneficiario:</td>
+                                        <td style="padding: 6px 0; font-weight: 600; color: #0f172a; text-align: right; font-size: 13px;">%s</td>
+                                    </tr>
+                                    <tr style="border-bottom: 1px solid #f1f5f9;">
+                                        <td style="padding: 6px 0; color: #64748b; font-size: 13px;">Metodo:</td>
+                                        <td style="padding: 6px 0; font-weight: 600; color: #0f172a; text-align: right; font-size: 13px;">%s</td>
+                                    </tr>
+                                    <tr style="border-top: 2px dashed #cbd5e1;">
+                                        <td style="padding: 10px 0 0; font-weight: 600; color: #0f172a; font-size: 14px;">Valor Total:</td>
+                                        <td style="padding: 10px 0 0; font-weight: 700; color: #059669; text-align: right; font-size: 18px;">%s MT</td>
+                                    </tr>
+                                </table>
+                            </div>
+                
+                            <div class="pdf-notice">
+                                O recibo oficial detalhado encontra-se anexado a este email em formato PDF (Recibo-%s.pdf).
+                            </div>
+                        </div>
+                        <div class="footer">
+                            Txopa Mocambique - Suporte: suporte@txopa.app<br/>
+                            Maputo, Mocambique
+                        </div>
                     </div>
-
-                    <div class="pdf-notice">
-                        O recibo oficial detalhado encontra-se anexado a este email em formato PDF (Recibo-%s.pdf).
-                    </div>
-                </div>
-                <div class="footer">
-                    Txopa Mocambique - Suporte: suporte@txopa.app<br/>
-                    Maputo, Mocambique
-                </div>
-            </div>
-        </body>
-        </html>
-        """.formatted(creatorName, reference, creatorName, method, amount, reference);
+                </body>
+                </html>
+                """.formatted(creatorName, reference, creatorName, method, amount, reference);
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(toEmail)
@@ -371,7 +371,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             <span class="header-badge">NOVO PEDIDO DE LEVANTAMENTO</span>
                             <h2 class="title">Solicitação de Levantamento Recebida</h2>
                             <p class="desc">O criador <strong>%s</strong> (@%s) solicitou uma retirada de fundos da plataforma.</p>
-                            
+                
                             <div class="table-box">
                                 <table>
                                     <tr>
@@ -408,7 +408,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                                     </tr>
                                 </table>
                             </div>
-
+                
                             <p style="font-size: 13px; color: #6b7280; margin: 0;">
                                 Por favor, aceda ao painel administrativo para validar a solicitação e efetuar a transferência manual/automática.
                             </p>
@@ -471,7 +471,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             <div class="icon-circle">✓</div>
                             <h2 class="title">Pedido de Levantamento Efetuado</h2>
                             <p class="desc">Olá, <strong>%s</strong>! O seu pedido de levantamento foi registado no sistema com sucesso.</p>
-
+                
                             <div class="table-box">
                                 <table>
                                     <tr>
@@ -500,14 +500,14 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                                     </tr>
                                 </table>
                             </div>
-
+                
                             <div class="notice-box">
                                 <div class="notice-title">⏱ Prazo de Processamento</div>
                                 <p class="notice-text">
                                     O pedido pode levar <strong>até 3 dias úteis</strong> para ser processado e creditado na sua conta móvel. Receberá uma nova notificação assim que a transferência for concluída.
                                 </p>
                             </div>
-
+                
                             <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">
                                 Se tiver alguma dúvida, responda a este email ou contacte o nosso suporte em suporte@txopa.app.
                             </p>
@@ -568,7 +568,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             <div class="icon-circle">💰</div>
                             <h2 class="title">Levantamento Concluído com Sucesso!</h2>
                             <p class="desc">Olá, <strong>%s</strong>! O seu pedido de levantamento foi processado e o montante foi transferido para a sua conta móvel.</p>
-
+                
                             <div class="table-box">
                                 <table>
                                     <tr>
@@ -593,9 +593,9 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                                     </tr>
                                 </table>
                             </div>
-
+                
                             %s
-
+                
                             <p style="font-size: 12px; color: #9ca3af; text-align: center; margin: 0;">
                                 Obrigado por fazer parte da comunidade Txopa. Continue a inspirar os seus apoiadores!
                             </p>
@@ -608,14 +608,14 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 </body>
                 </html>
                 """.formatted(
-                        creatorName,
-                        amount,
-                        method,
-                        phone,
-                        (transactionRef != null && !transactionRef.isBlank()) ? transactionRef : "N/D",
-                        date,
-                        (note != null && !note.isBlank()) ? "<div class=\"note-box\"><strong>Nota do Administrador:</strong> " + note + "</div>" : ""
-                );
+                creatorName,
+                amount,
+                method,
+                phone,
+                (transactionRef != null && !transactionRef.isBlank()) ? transactionRef : "N/D",
+                date,
+                (note != null && !note.isBlank()) ? "<div class=\"note-box\"><strong>Nota do Administrador:</strong> " + note + "</div>" : ""
+        );
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(creatorEmail)
@@ -663,7 +663,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             <div class="icon-circle">✕</div>
                             <h2 class="title">Atualização sobre o seu Levantamento</h2>
                             <p class="desc">Olá, <strong>%s</strong>! O seu pedido de levantamento não pôde ser executado pela administração.</p>
-
+                
                             <div class="table-box">
                                 <table>
                                     <tr>
@@ -684,12 +684,12 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                                     </tr>
                                 </table>
                             </div>
-
+                
                             <div class="reason-box">
                                 <strong>Motivo informado pela equipa:</strong><br/>
                                 %s
                             </div>
-
+                
                             <p style="font-size: 13px; color: #6b7280; line-height: 1.5; margin: 0 0 16px;">
                                 O saldo correspondente permanece disponível na sua conta para nova solicitação assim que a situação estiver regularizada.
                             </p>
@@ -702,12 +702,12 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                 </body>
                 </html>
                 """.formatted(
-                        creatorName,
-                        amount,
-                        method,
-                        date,
-                        (reason != null && !reason.isBlank()) ? reason : "Inconsistência nos dados ou impossibilidade de transferência para a conta informada."
-                );
+                creatorName,
+                amount,
+                method,
+                date,
+                (reason != null && !reason.isBlank()) ? reason : "Inconsistência nos dados ou impossibilidade de transferência para a conta informada."
+        );
 
         EmailEvent event = EmailEvent.builder()
                 .toEmail(creatorEmail)
@@ -759,7 +759,7 @@ public class RabbitMQEmailPublisherAdapter implements EmailRepository {
                             <a href="%s" class="btn">Redefinir palavra-passe</a>
                 
                             <div class="divider"></div>
-                            
+                
                             <p class="subtext" style="color: #b91c1c; font-weight: 500;">
                                 &#9888;&#65039; Este link expira dentro de 1 hora por motivos de seguran&ccedil;a.
                             </p>

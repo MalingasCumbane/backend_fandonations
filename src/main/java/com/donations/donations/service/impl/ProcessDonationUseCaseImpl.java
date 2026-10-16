@@ -28,16 +28,14 @@ public class ProcessDonationUseCaseImpl implements ProcessDonationUseCase {
 
     @Override
     public DonationResult process(DonationCommand command) {
-        Creator creator = creatorRepository.findById(command.getCreatorId())
-                .orElseThrow(() -> new IllegalArgumentException("Criador não encontrado."));
+        Creator creator = creatorRepository.findById(command.getCreatorId()).orElseThrow(() -> new IllegalArgumentException("Criador não encontrado."));
 
         if (creator.getStatus() != CreatorStatus.VERIFIED) {
             throw new IllegalArgumentException("O criador não está verificado.");
         }
 
         if (command.getCampaignId() != null) {
-            Campaign campaign = campaignRepository.findById(command.getCampaignId())
-                    .orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada."));
+            Campaign campaign = campaignRepository.findById(command.getCampaignId()).orElseThrow(() -> new IllegalArgumentException("Campanha não encontrada."));
             if (campaign.getStatus() != CampaignStatus.ACTIVE) {
                 throw new IllegalArgumentException("A campanha não está ativa.");
             }
@@ -46,7 +44,7 @@ public class ProcessDonationUseCaseImpl implements ProcessDonationUseCase {
             }
         }
 
-        if (command.getAmount().compareTo(BigDecimal.TEN) < 0) {
+        if (command.getAmount().compareTo(BigDecimal.TEN) < 10) {
             throw new IllegalArgumentException("O valor mínimo de doação é 10 MZN.");
         }
 
@@ -60,32 +58,13 @@ public class ProcessDonationUseCaseImpl implements ProcessDonationUseCase {
             }
         }
 
-        Donation donation = Donation.builder()
-                .creatorId(creator.getId())
-                .campaignId(command.getCampaignId())
-                .amount(command.getAmount())
-                .feeAmount(BigDecimal.ZERO) // We could apply platform fee calculation here
-                .netAmount(command.getAmount())
-                .method(command.getMethod())
-                .status(DonationStatus.PROCESSING)
-                .anonymous(command.isAnonymous())
-                .message(command.getMessage())
-                .supporterName(command.getSupporterName())
-                .supporterEmail(command.getSupporterEmail())
-                .supporterPhone(command.getPhone())
-                .reference("APO" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase())
-                .build();
+        Donation donation = Donation.builder().creatorId(creator.getId()).campaignId(command.getCampaignId()).amount(command.getAmount()).feeAmount(BigDecimal.ZERO) // We could apply platform fee calculation here
+                .netAmount(command.getAmount()).method(command.getMethod()).status(DonationStatus.PROCESSING).anonymous(command.isAnonymous()).message(command.getMessage()).supporterName(command.getSupporterName()).supporterEmail(command.getSupporterEmail()).supporterPhone(command.getPhone()).reference("APO" + UUID.randomUUID().toString().replace("-", "").substring(0, 8).toUpperCase()).build();
 
         donation = donationRepository.save(donation);
 
         asyncPaymentProcessor.processPayment(donation, command.getPhone());
 
-        return DonationResult.builder()
-                .reference(donation.getReference())
-                .status(donation.getStatus().name())
-                .amount(donation.getAmount())
-                .method(donation.getMethod().name())
-                .creatorUsername(creator.getUsername())
-                .build();
+        return DonationResult.builder().reference(donation.getReference()).status(donation.getStatus().name()).amount(donation.getAmount()).method(donation.getMethod().name()).creatorUsername(creator.getUsername()).build();
     }
 }

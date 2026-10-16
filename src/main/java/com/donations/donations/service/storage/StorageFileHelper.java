@@ -4,7 +4,8 @@ import java.util.Base64;
 
 public final class StorageFileHelper {
 
-    private StorageFileHelper() {}
+    private StorageFileHelper() {
+    }
 
     public static boolean isDataUrlOrBase64(String input) {
         if (input == null || input.isBlank()) return false;

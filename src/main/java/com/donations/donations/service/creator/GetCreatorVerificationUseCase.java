@@ -17,28 +17,11 @@ public class GetCreatorVerificationUseCase {
     private final FileStoragePort fileStoragePort;
 
     public Optional<VerificationRequest> execute(UUID creatorId) {
-        return verificationRepository.findFirstByCreatorIdOrderByCreatedAtDesc(creatorId)
-                .map(this::enrichSignedUrls);
+        return verificationRepository.findFirstByCreatorIdOrderByCreatedAtDesc(creatorId).map(this::enrichSignedUrls);
     }
 
     private VerificationRequest enrichSignedUrls(VerificationRequest req) {
-        return VerificationRequest.builder()
-                .id(req.getId())
-                .creatorId(req.getCreatorId())
-                .documentType(req.getDocumentType())
-                .documentNumber(req.getDocumentNumber())
-                .fullName(req.getFullName())
-                .documentFile(resolveFileUrl(req.getDocumentFile()))
-                .selfieImage(resolveFileUrl(req.getSelfieImage()))
-                .note(req.getNote())
-                .documentFileType(req.getDocumentFileType())
-                .submittedAt(req.getSubmittedAt())
-                .reviewedAt(req.getReviewedAt())
-                .adminNote(req.getAdminNote())
-                .status(req.getStatus())
-                .createdAt(req.getCreatedAt())
-                .updatedAt(req.getUpdatedAt())
-                .build();
+        return VerificationRequest.builder().id(req.getId()).creatorId(req.getCreatorId()).documentType(req.getDocumentType()).documentNumber(req.getDocumentNumber()).fullName(req.getFullName()).documentFile(resolveFileUrl(req.getDocumentFile())).selfieImage(resolveFileUrl(req.getSelfieImage())).note(req.getNote()).documentFileType(req.getDocumentFileType()).submittedAt(req.getSubmittedAt()).reviewedAt(req.getReviewedAt()).adminNote(req.getAdminNote()).status(req.getStatus()).createdAt(req.getCreatedAt()).updatedAt(req.getUpdatedAt()).build();
     }
 
     private String resolveFileUrl(String fileRef) {

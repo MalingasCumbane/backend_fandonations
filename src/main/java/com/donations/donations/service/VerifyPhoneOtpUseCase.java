@@ -31,9 +31,7 @@ public class VerifyPhoneOtpUseCase {
 
         String digits = rawPhoneNumber.replaceAll("\\D", "").replaceFirst("^258", "");
 
-        PhoneVerification entity = repository.findFirstByUserIdAndPhoneNumberOrderByCreatedAtDesc(userId, digits)
-                .or(() -> repository.findFirstByUserIdAndPhoneNumberOrderByCreatedAtDesc(userId, rawPhoneNumber))
-                .orElseThrow(() -> new IllegalArgumentException("Nenhum pedido de validação pendente encontrado para este número."));
+        PhoneVerification entity = repository.findFirstByUserIdAndPhoneNumberOrderByCreatedAtDesc(userId, digits).or(() -> repository.findFirstByUserIdAndPhoneNumberOrderByCreatedAtDesc(userId, rawPhoneNumber)).orElseThrow(() -> new IllegalArgumentException("Nenhum pedido de validação pendente encontrado para este número."));
 
         if (entity.isVerified()) {
             throw new IllegalStateException("Este número já se encontra verificado.");
@@ -48,8 +46,7 @@ public class VerifyPhoneOtpUseCase {
         entity.setVerified(true);
         repository.save(entity);
 
-        Creator creator = creatorRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalStateException("Perfil de criador não encontrado."));
+        Creator creator = creatorRepository.findByUserId(userId).orElseThrow(() -> new IllegalStateException("Perfil de criador não encontrado."));
 
         if (digits.startsWith("84") || digits.startsWith("85")) {
             creator.setMpesaPhone(digits);
@@ -67,8 +64,7 @@ public class VerifyPhoneOtpUseCase {
 
     @Transactional
     public void removePhone(UUID userId, String provider) {
-        Creator creator = creatorRepository.findByUserId(userId)
-                .orElseThrow(() -> new IllegalStateException("Perfil de criador não encontrado."));
+        Creator creator = creatorRepository.findByUserId(userId).orElseThrow(() -> new IllegalStateException("Perfil de criador não encontrado."));
 
         if ("MPESA".equalsIgnoreCase(provider)) {
             creator.setMpesaPhone(null);

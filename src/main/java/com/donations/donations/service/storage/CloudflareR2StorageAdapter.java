@@ -24,9 +24,7 @@ public class CloudflareR2StorageAdapter implements FileStoragePort {
         this.localFallback = localFallback;
         this.host = properties.getAccountId() + ".r2.cloudflarestorage.com";
         this.signer = new AwsSigV4Signer(properties.getAccessKeyId(), properties.getSecretAccessKey());
-        this.httpClient = HttpClient.newBuilder()
-                .connectTimeout(Duration.ofSeconds(15))
-                .build();
+        this.httpClient = HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(15)).build();
     }
 
     @Override
@@ -35,19 +33,9 @@ public class CloudflareR2StorageAdapter implements FileStoragePort {
         String canonicalUri = "/" + properties.getBucketName() + "/" + cleanKey;
         String requestUrl = "https://" + host + canonicalUri;
 
-        Map<String, String> signedHeaders = signer.signRequest(
-                "PUT",
-                host,
-                canonicalUri,
-                content,
-                Map.of("Content-Type", contentType != null ? contentType : "application/octet-stream")
-        );
+        Map<String, String> signedHeaders = signer.signRequest("PUT", host, canonicalUri, content, Map.of("Content-Type", contentType != null ? contentType : "application/octet-stream"));
 
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(requestUrl))
-                .timeout(Duration.ofSeconds(60))
-                .header("Content-Type", contentType != null ? contentType : "application/octet-stream")
-                .PUT(HttpRequest.BodyPublishers.ofByteArray(content));
+        HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(requestUrl)).timeout(Duration.ofSeconds(60)).header("Content-Type", contentType != null ? contentType : "application/octet-stream").PUT(HttpRequest.BodyPublishers.ofByteArray(content));
 
         signedHeaders.forEach(builder::header);
 
@@ -57,13 +45,11 @@ public class CloudflareR2StorageAdapter implements FileStoragePort {
                 log.info("Ficheiro carregado com sucesso para Cloudflare R2: {}", cleanKey);
                 return cleanKey;
             } else {
-                log.error("Cloudflare R2 rejeitou o upload (HTTP {}): {}. A usar contingência local para {}",
-                        response.statusCode(), response.body(), cleanKey);
+                log.error("Cloudflare R2 rejeitou o upload (HTTP {}): {}. A usar contingência local para {}", response.statusCode(), response.body(), cleanKey);
                 return localFallback.upload(cleanKey, content, contentType);
             }
         } catch (Exception e) {
-            log.error("Erro ao comunicar com Cloudflare R2: {}. A usar contingência local para {}",
-                    e.getMessage(), cleanKey);
+            log.error("Erro ao comunicar com Cloudflare R2: {}. A usar contingência local para {}", e.getMessage(), cleanKey);
             return localFallback.upload(cleanKey, content, contentType);
         }
     }
@@ -87,18 +73,9 @@ public class CloudflareR2StorageAdapter implements FileStoragePort {
         String canonicalUri = "/" + properties.getBucketName() + "/" + cleanKey;
         String requestUrl = "https://" + host + canonicalUri;
 
-        Map<String, String> signedHeaders = signer.signRequest(
-                "GET",
-                host,
-                canonicalUri,
-                new byte[0],
-                null
-        );
+        Map<String, String> signedHeaders = signer.signRequest("GET", host, canonicalUri, new byte[0], null);
 
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(requestUrl))
-                .timeout(Duration.ofSeconds(30))
-                .GET();
+        HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(requestUrl)).timeout(Duration.ofSeconds(30)).GET();
 
         signedHeaders.forEach(builder::header);
 
@@ -125,18 +102,9 @@ public class CloudflareR2StorageAdapter implements FileStoragePort {
         String canonicalUri = "/" + properties.getBucketName() + "/" + cleanKey;
         String requestUrl = "https://" + host + canonicalUri;
 
-        Map<String, String> signedHeaders = signer.signRequest(
-                "DELETE",
-                host,
-                canonicalUri,
-                new byte[0],
-                null
-        );
+        Map<String, String> signedHeaders = signer.signRequest("DELETE", host, canonicalUri, new byte[0], null);
 
-        HttpRequest.Builder builder = HttpRequest.newBuilder()
-                .uri(URI.create(requestUrl))
-                .timeout(Duration.ofSeconds(15))
-                .DELETE();
+        HttpRequest.Builder builder = HttpRequest.newBuilder().uri(URI.create(requestUrl)).timeout(Duration.ofSeconds(15)).DELETE();
 
         signedHeaders.forEach(builder::header);
 

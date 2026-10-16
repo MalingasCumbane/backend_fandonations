@@ -16,8 +16,7 @@ public class StorageConfig {
             log.info("Cloudflare R2 ativado e configurado para o bucket: {}", properties.getBucketName());
             return new CloudflareR2StorageAdapter(properties, localAdapter);
         } else {
-            log.warn("Cloudflare R2 não configurado ou desativado. A utilizar armazenamento local na pasta: {}",
-                    properties.getLocalUploadDir());
+            log.warn("Cloudflare R2 não configurado ou desativado. A utilizar armazenamento local na pasta: {}", properties.getLocalUploadDir());
             return localAdapter;
         }
     }

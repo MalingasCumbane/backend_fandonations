@@ -50,15 +50,9 @@ public class GetCreatorStatsUseCase {
         BigDecimal available = totalNet.subtract(totalPayouts);
         if (available.compareTo(BigDecimal.ZERO) < 0) available = BigDecimal.ZERO;
 
-        BigDecimal pendingDonations = donations.stream()
-                .filter(d -> d.getStatus() == DonationStatus.PROCESSING || d.getStatus() == DonationStatus.PENDING)
-                .map(Donation::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal pendingDonations = donations.stream().filter(d -> d.getStatus() == DonationStatus.PROCESSING || d.getStatus() == DonationStatus.PENDING).map(Donation::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        BigDecimal pendingPayouts = payouts.stream()
-                .filter(p -> p.getStatus() == com.donations.donations.model.enums.PayoutStatus.PENDING || p.getStatus() == com.donations.donations.model.enums.PayoutStatus.PROCESSING)
-                .map(Payout::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        BigDecimal pendingPayouts = payouts.stream().filter(p -> p.getStatus() == com.donations.donations.model.enums.PayoutStatus.PENDING || p.getStatus() == com.donations.donations.model.enums.PayoutStatus.PROCESSING).map(Payout::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
 
         BigDecimal pending = pendingDonations.add(pendingPayouts);
 
