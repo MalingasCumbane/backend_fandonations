@@ -18,6 +18,7 @@ public class CreatorController {
     private final CheckUsernameUseCase checkUsernameUseCase;
     private final com.donations.donations.service.creator.UploadCreatorAvatarUseCase uploadCreatorAvatarUseCase;
     private final com.donations.donations.service.creator.RemoveCreatorAvatarUseCase removeCreatorAvatarUseCase;
+    private final com.donations.donations.service.creator.RequestFullNameChangeUseCase requestFullNameChangeUseCase;
 
     @GetMapping("/check-username")
     public ResponseEntity<?> checkUsername(@RequestParam String username, @AuthenticationPrincipal UserDetailsImpl userDetails) {
@@ -49,6 +50,42 @@ public class CreatorController {
             return ResponseEntity.ok(saved);
         } catch (IllegalArgumentException e) {
             return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PutMapping("/me/settings")
+    public ResponseEntity<?> updateSettings(@AuthenticationPrincipal UserDetailsImpl userDetails, @RequestBody com.donations.donations.dto.creator.CreatorProfileRequestDto input) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+        try {
+            Creator saved = saveCreatorProfileUseCase.execute(userDetails.getId(), input);
+            return ResponseEntity.ok(saved);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        }
+    }
+
+    @PostMapping({"/me/full-name-change", "/me/request-identity-change"})
+    public ResponseEntity<?> requestIdentityChange(
+            @AuthenticationPrincipal UserDetailsImpl userDetails,
+            @RequestBody java.util.Map<String, String> body
+    ) {
+        if (userDetails == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        String fullName = body.get("fullName") != null ? body.get("fullName") : body.get("requestedFullName");
+        String username = body.get("username") != null ? body.get("username") : body.get("requestedUsername");
+        String reason = body.get("reason") != null ? body.get("reason") : body.get("nameChangeReason");
+
+        try {
+            Creator updated = requestFullNameChangeUseCase.execute(userDetails.getId(), fullName, username, reason);
+            return ResponseEntity.ok(updated);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.badRequest().body(java.util.Map.of("message", e.getMessage()));
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(409).body(java.util.Map.of("message", e.getMessage()));
         }
     }
 

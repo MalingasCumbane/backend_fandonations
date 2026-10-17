@@ -64,14 +64,18 @@ public class SaveCreatorProfileUseCase {
             String processedAvatar = processAvatar(existing.getId(), input.getAvatarUrl(), existing.getAvatarUrl());
 
             if (existing.getStatus() == CreatorStatus.VERIFIED) {
-                // If verified, only allow updating socials, avatar and marketing preferences.
+                // Modelo Meta/Instagram: Dados de Apresentação são livres para edição
+                if (input.getBio() != null) existing.setBio(input.getBio());
+                if (category != null) existing.setCategory(category);
+                if (input.getCity() != null) existing.setCity(input.getCity());
+                existing.setAvatarUrl(processedAvatar);
                 existing.setFacebookUrl(input.getFacebookUrl() != null ? input.getFacebookUrl() : existing.getFacebookUrl());
                 existing.setTwitterUrl(input.getTwitterUrl() != null ? input.getTwitterUrl() : existing.getTwitterUrl());
                 existing.setInstagramUrl(input.getInstagramUrl() != null ? input.getInstagramUrl() : existing.getInstagramUrl());
                 existing.setYoutubeUrl(input.getYoutubeUrl() != null ? input.getYoutubeUrl() : existing.getYoutubeUrl());
                 existing.setTiktokUrl(input.getTiktokUrl() != null ? input.getTiktokUrl() : existing.getTiktokUrl());
                 existing.setAcceptsMarketing(input.getAcceptsMarketing() != null ? input.getAcceptsMarketing() : existing.isAcceptsMarketing());
-                existing.setAvatarUrl(processedAvatar);
+                // Dados de Identidade (fullName, username, birthDate, country) são protegidos e não alterados diretamente aqui
                 return creatorRepository.save(existing);
             }
 

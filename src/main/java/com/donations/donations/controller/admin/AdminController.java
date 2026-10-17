@@ -23,6 +23,7 @@ public class AdminController {
     private final GetCreatorsUseCase getCreatorsUseCase;
     private final ReviewCreatorUseCase reviewCreatorUseCase;
     private final ApproveFullNameUseCase approveFullNameUseCase;
+    private final RejectFullNameUseCase rejectFullNameUseCase;
     private final GetVerificationsUseCase getVerificationsUseCase;
     private final GetDonationsUseCase getDonationsUseCase;
     private final GetPayoutsUseCase getPayoutsUseCase;
@@ -54,6 +55,12 @@ public class AdminController {
     @PostMapping("/creators/{id}/approve-full-name")
     public ResponseEntity<Creator> approveFullName(@PathVariable UUID id) {
         return ResponseEntity.ok(approveFullNameUseCase.execute(id));
+    }
+
+    @PostMapping("/creators/{id}/reject-full-name")
+    public ResponseEntity<Creator> rejectFullName(@PathVariable UUID id, @RequestBody(required = false) java.util.Map<String, String> body) {
+        String reason = body != null ? body.get("reason") : null;
+        return ResponseEntity.ok(rejectFullNameUseCase.execute(id, reason));
     }
 
     @GetMapping("/verifications")

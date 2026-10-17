@@ -42,6 +42,8 @@ public class GetCreatorsUseCase {
         map.put("adminNote", c.getAdminNote());
         map.put("rejectionReason", c.getRejectionReason());
         map.put("requestedFullName", c.getRequestedFullName());
+        map.put("requestedUsername", c.getRequestedUsername());
+        map.put("nameChangeReason", c.getNameChangeReason());
         map.put("submittedAt", c.getSubmittedAt() != null ? c.getSubmittedAt().toString() : null);
         map.put("createdAt", c.getCreatedAt() != null ? c.getCreatedAt().toString() : null);
 
