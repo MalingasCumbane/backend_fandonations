@@ -4,6 +4,7 @@ import com.donations.donations.model.Campaign;
 import com.donations.donations.model.Category;
 import com.donations.donations.model.Country;
 import com.donations.donations.model.Report;
+import com.donations.donations.model.CreatorStatus;
 import com.donations.donations.model.enums.DonationStatus;
 import com.donations.donations.model.enums.PaymentMethod;
 import com.donations.donations.dto.publics.*;
@@ -116,10 +117,24 @@ public class PublicDataController {
                             .filter(camp -> camp.getStatus() != null && camp.getStatus().name().equals("ACTIVE"))
                             .collect(Collectors.toList());
 
+                    List<com.donations.donations.model.Donation> creatorDonations = donationRepository.findByCreatorId(c.getId());
+                    long donationCount = creatorDonations.stream()
+                            .filter(d -> d.getStatus() == DonationStatus.SUCCESS)
+                            .count();
+                    long supporterCount = creatorDonations.stream()
+                            .filter(d -> d.getStatus() == DonationStatus.SUCCESS)
+                            .map(d -> (d.getSupporterEmail() != null && !d.getSupporterEmail().isBlank())
+                                    ? d.getSupporterEmail().trim().toLowerCase()
+                                    : ((d.getSupporterName() != null && !d.getSupporterName().isBlank())
+                                            ? d.getSupporterName().trim().toLowerCase()
+                                            : d.getId().toString()))
+                            .distinct()
+                            .count();
+
                     return PublicCreatorProfile.builder()
                             .creator(publicCreator)
                             .campaigns(campaigns)
-                            .stats(java.util.Map.of("supporterCount", 0, "donationCount", 0))
+                            .stats(java.util.Map.of("supporterCount", (int) supporterCount, "donationCount", (int) donationCount))
                             .build();
                 })
                 .orElseThrow(() -> new java.util.NoSuchElementException("Creator not found"));
@@ -127,7 +142,40 @@ public class PublicDataController {
 
     @GetMapping("/stats")
     public Map<String, Object> getStats() {
-        return Map.of();
+        long verifiedCreators = creatorJpaRepository.findAll().stream()
+                .filter(c -> c.getStatus() == CreatorStatus.VERIFIED)
+                .count();
+        long totalCreators = creatorJpaRepository.count();
+
+        List<com.donations.donations.model.Donation> allDonations = donationRepository.findAll();
+        long confirmedDonations = allDonations.stream()
+                .filter(d -> d.getStatus() == DonationStatus.SUCCESS)
+                .count();
+
+        long activeCampaigns = campaignRepository.findAll().stream()
+                .filter(c -> c.getStatus() != null && c.getStatus().name().equals("ACTIVE"))
+                .count();
+
+        long uniqueSupporters = allDonations.stream()
+                .filter(d -> d.getStatus() == DonationStatus.SUCCESS)
+                .map(d -> (d.getSupporterEmail() != null && !d.getSupporterEmail().isBlank())
+                        ? d.getSupporterEmail().trim().toLowerCase()
+                        : ((d.getSupporterName() != null && !d.getSupporterName().isBlank())
+                                ? d.getSupporterName().trim().toLowerCase()
+                                : d.getId().toString()))
+                .distinct()
+                .count();
+
+        Map<String, Object> stats = new java.util.LinkedHashMap<>();
+        stats.put("creators", verifiedCreators > 0 ? verifiedCreators : totalCreators);
+        stats.put("totalCreators", totalCreators);
+        stats.put("verified", verifiedCreators);
+        stats.put("donations", confirmedDonations);
+        stats.put("campaigns", activeCampaigns);
+        stats.put("activeCampaigns", activeCampaigns);
+        stats.put("supporters", uniqueSupporters);
+
+        return stats;
     }
 
     @GetMapping("/settings")
