@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class CreatorProfileRequestDto {
     private String fullName;
+    private java.time.LocalDate birthDate;
     private String username;
     private String email;
     private String country;

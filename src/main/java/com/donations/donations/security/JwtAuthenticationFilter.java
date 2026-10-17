@@ -1,5 +1,6 @@
 package com.donations.donations.security;
 
+import com.donations.donations.service.UserSessionService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,6 +14,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 @Component
 @RequiredArgsConstructor
@@ -20,20 +22,25 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtUtils jwtUtils;
     private final UserDetailsServiceImpl userDetailsService;
+    private final UserSessionService userSessionService;
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         try {
             String jwt = jwtUtils.getJwtFromCookies(request);
             if (jwt != null && jwtUtils.validateJwtToken(jwt)) {
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                UUID sessionId = jwtUtils.getSessionIdFromJwtToken(jwt);
 
-                UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                // If token contains a session ID, verify if it was revoked
+                if (sessionId == null || !userSessionService.isSessionRevoked(sessionId)) {
+                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
 
-                authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                }
             }
         } catch (Exception e) {
             // Log error

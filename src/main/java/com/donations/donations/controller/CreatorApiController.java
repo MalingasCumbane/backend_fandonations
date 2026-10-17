@@ -127,9 +127,13 @@ public class CreatorApiController {
     public ResponseEntity<com.donations.donations.dto.PageResponse<com.donations.donations.dto.creator.WalletTransactionResponseDto>> getMyWalletTransactions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String period,
             @AuthenticationPrincipal UserDetailsImpl userDetails
     ) {
         UUID creatorId = getCreatorId(userDetails.getId());
-        return ResponseEntity.ok(walletService.getTransactionsForCreatorPaged(creatorId, page, size));
+        return ResponseEntity.ok(walletService.getTransactionsForCreatorPaged(creatorId, page, size, type, category, search, period));
     }
 }

@@ -82,6 +82,13 @@ public class WalletService {
 
     @Transactional
     public PageResponse<WalletTransactionResponseDto> getTransactionsForCreatorPaged(UUID creatorId, int page, int size) {
+        return getTransactionsForCreatorPaged(creatorId, page, size, null, null, null, null);
+    }
+
+    @Transactional
+    public PageResponse<WalletTransactionResponseDto> getTransactionsForCreatorPaged(
+            UUID creatorId, int page, int size, String type, String category, String search, String period
+    ) {
         if (walletTransactionRepository.countByCreatorId(creatorId) == 0) {
             backfillHistory(creatorId);
         }
@@ -91,7 +98,63 @@ public class WalletService {
         String fullName = creator != null ? (creator.getFullName() != null ? creator.getFullName() : creator.getUsername()) : "";
 
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), Math.max(1, size));
-        org.springframework.data.domain.Page<WalletTransaction> pageResult = walletTransactionRepository.findByCreatorIdOrderByCreatedAtDesc(creatorId, pageable);
+
+        boolean hasFilters = (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type))
+                || (category != null && !category.isBlank())
+                || (search != null && !search.isBlank())
+                || (period != null && !period.isBlank() && !"all".equalsIgnoreCase(period));
+
+        org.springframework.data.domain.Page<WalletTransaction> pageResult;
+
+        if (!hasFilters) {
+            pageResult = walletTransactionRepository.findByCreatorIdOrderByCreatedAtDesc(creatorId, pageable);
+        } else {
+            org.springframework.data.jpa.domain.Specification<WalletTransaction> spec = (root, query, cb) -> {
+                List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+                predicates.add(cb.equal(root.get("creatorId"), creatorId));
+
+                if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
+                    if ("PLATFORM_FEE".equalsIgnoreCase(type)) {
+                        predicates.add(root.get("category").in(
+                                TransactionCategory.PLATFORM_FEE,
+                                TransactionCategory.PLATFORM_FEE_REFUND
+                        ));
+                    } else {
+                        try {
+                            TransactionType txType = TransactionType.valueOf(type.toUpperCase());
+                            predicates.add(cb.equal(root.get("type"), txType));
+                        } catch (Exception ignored) {}
+                    }
+                }
+
+                if (category != null && !category.isBlank()) {
+                    try {
+                        TransactionCategory cat = TransactionCategory.valueOf(category.toUpperCase());
+                        predicates.add(cb.equal(root.get("category"), cat));
+                    } catch (Exception ignored) {}
+                }
+
+                if (period != null && !period.isBlank() && !"all".equalsIgnoreCase(period)) {
+                    try {
+                        int days = Integer.parseInt(period);
+                        LocalDateTime since = LocalDateTime.now().minusDays(days);
+                        predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), since));
+                    } catch (Exception ignored) {}
+                }
+
+                if (search != null && !search.isBlank()) {
+                    String pattern = "%" + search.trim().toLowerCase() + "%";
+                    var descMatch = cb.like(cb.lower(root.get("description")), pattern);
+                    var refMatch = cb.like(cb.lower(root.get("referenceId")), pattern);
+                    predicates.add(cb.or(descMatch, refMatch));
+                }
+
+                query.orderBy(cb.desc(root.get("createdAt")));
+                return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+            };
+
+            pageResult = walletTransactionRepository.findAll(spec, pageable);
+        }
 
         return PageResponse.of(pageResult, tx -> toDto(tx, username, fullName));
     }
@@ -121,8 +184,15 @@ public class WalletService {
 
     @Transactional
     public com.donations.donations.dto.PageResponse<WalletTransactionResponseDto> getAllTransactionsPaged(UUID optionalCreatorId, int page, int size) {
+        return getAllTransactionsPaged(optionalCreatorId, page, size, null, null, null, null);
+    }
+
+    @Transactional
+    public com.donations.donations.dto.PageResponse<WalletTransactionResponseDto> getAllTransactionsPaged(
+            UUID optionalCreatorId, int page, int size, String type, String category, String search, String period
+    ) {
         if (optionalCreatorId != null) {
-            return getTransactionsForCreatorPaged(optionalCreatorId, page, size);
+            return getTransactionsForCreatorPaged(optionalCreatorId, page, size, type, category, search, period);
         }
 
         List<Creator> allCreators = creatorRepository.findAll();
@@ -135,7 +205,73 @@ public class WalletService {
         }
 
         org.springframework.data.domain.Pageable pageable = org.springframework.data.domain.PageRequest.of(Math.max(0, page), Math.max(1, size));
-        org.springframework.data.domain.Page<WalletTransaction> pageResult = walletTransactionRepository.findAllByOrderByCreatedAtDesc(pageable);
+
+        boolean hasFilters = (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type))
+                || (category != null && !category.isBlank())
+                || (search != null && !search.isBlank())
+                || (period != null && !period.isBlank() && !"all".equalsIgnoreCase(period));
+
+        org.springframework.data.domain.Page<WalletTransaction> pageResult;
+
+        if (!hasFilters) {
+            pageResult = walletTransactionRepository.findAllByOrderByCreatedAtDesc(pageable);
+        } else {
+            org.springframework.data.jpa.domain.Specification<WalletTransaction> spec = (root, query, cb) -> {
+                List<jakarta.persistence.criteria.Predicate> predicates = new ArrayList<>();
+
+                if (type != null && !type.isBlank() && !"ALL".equalsIgnoreCase(type)) {
+                    if ("PLATFORM_FEE".equalsIgnoreCase(type)) {
+                        predicates.add(root.get("category").in(
+                                TransactionCategory.PLATFORM_FEE,
+                                TransactionCategory.PLATFORM_FEE_REFUND
+                        ));
+                    } else {
+                        try {
+                            TransactionType txType = TransactionType.valueOf(type.toUpperCase());
+                            predicates.add(cb.equal(root.get("type"), txType));
+                        } catch (Exception ignored) {}
+                    }
+                }
+
+                if (category != null && !category.isBlank()) {
+                    try {
+                        TransactionCategory cat = TransactionCategory.valueOf(category.toUpperCase());
+                        predicates.add(cb.equal(root.get("category"), cat));
+                    } catch (Exception ignored) {}
+                }
+
+                if (period != null && !period.isBlank() && !"all".equalsIgnoreCase(period)) {
+                    try {
+                        int days = Integer.parseInt(period);
+                        LocalDateTime since = LocalDateTime.now().minusDays(days);
+                        predicates.add(cb.greaterThanOrEqualTo(root.get("createdAt"), since));
+                    } catch (Exception ignored) {}
+                }
+
+                if (search != null && !search.isBlank()) {
+                    String pattern = "%" + search.trim().toLowerCase() + "%";
+                    var descMatch = cb.like(cb.lower(root.get("description")), pattern);
+                    var refMatch = cb.like(cb.lower(root.get("referenceId")), pattern);
+
+                    List<UUID> matchingCreatorIds = allCreators.stream()
+                            .filter(c -> (c.getUsername() != null && c.getUsername().toLowerCase().contains(search.trim().toLowerCase()))
+                                    || (c.getFullName() != null && c.getFullName().toLowerCase().contains(search.trim().toLowerCase())))
+                            .map(Creator::getId)
+                            .collect(Collectors.toList());
+
+                    if (!matchingCreatorIds.isEmpty()) {
+                        predicates.add(cb.or(descMatch, refMatch, root.get("creatorId").in(matchingCreatorIds)));
+                    } else {
+                        predicates.add(cb.or(descMatch, refMatch));
+                    }
+                }
+
+                query.orderBy(cb.desc(root.get("createdAt")));
+                return cb.and(predicates.toArray(new jakarta.persistence.criteria.Predicate[0]));
+            };
+
+            pageResult = walletTransactionRepository.findAll(spec, pageable);
+        }
 
         return com.donations.donations.dto.PageResponse.of(pageResult, tx -> {
             Creator c = creatorMap.get(tx.getCreatorId());

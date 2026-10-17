@@ -77,6 +77,7 @@ public class SaveCreatorProfileUseCase {
 
             // Update fields
             existing.setFullName(input.getFullName() != null ? input.getFullName() : existing.getFullName());
+            existing.setBirthDate(input.getBirthDate() != null ? input.getBirthDate() : existing.getBirthDate());
             existing.setUsername(input.getUsername() != null ? input.getUsername() : existing.getUsername());
             existing.setEmail(input.getEmail() != null ? input.getEmail() : existing.getEmail());
 
@@ -97,7 +98,26 @@ public class SaveCreatorProfileUseCase {
             UUID newCreatorId = UUID.randomUUID();
             String processedAvatar = processAvatar(newCreatorId, input.getAvatarUrl(), null);
 
-            creatorToSave = Creator.builder().id(newCreatorId).userId(userId).fullName(input.getFullName()).username(input.getUsername()).email(input.getEmail()).country(country).city(input.getCity()).category(category).bio(input.getBio()).avatarUrl(processedAvatar).facebookUrl(input.getFacebookUrl()).twitterUrl(input.getTwitterUrl()).instagramUrl(input.getInstagramUrl()).youtubeUrl(input.getYoutubeUrl()).tiktokUrl(input.getTiktokUrl()).acceptsMarketing(input.getAcceptsMarketing() != null ? input.getAcceptsMarketing() : false).status(CreatorStatus.DRAFT).build();
+            creatorToSave = Creator.builder()
+                    .id(newCreatorId)
+                    .userId(userId)
+                    .fullName(input.getFullName())
+                    .birthDate(input.getBirthDate())
+                    .username(input.getUsername())
+                    .email(input.getEmail())
+                    .country(country)
+                    .city(input.getCity())
+                    .category(category)
+                    .bio(input.getBio())
+                    .avatarUrl(processedAvatar)
+                    .facebookUrl(input.getFacebookUrl())
+                    .twitterUrl(input.getTwitterUrl())
+                    .instagramUrl(input.getInstagramUrl())
+                    .youtubeUrl(input.getYoutubeUrl())
+                    .tiktokUrl(input.getTiktokUrl())
+                    .acceptsMarketing(input.getAcceptsMarketing() != null ? input.getAcceptsMarketing() : false)
+                    .status(CreatorStatus.DRAFT)
+                    .build();
         }
 
         return creatorRepository.save(creatorToSave);

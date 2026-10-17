@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import lombok.experimental.SuperBuilder;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -69,6 +70,9 @@ public class Creator extends TimeStamp {
 
     @Column(columnDefinition = "TEXT")
     private String rejectionReason;
+
+    @Column(name = "birth_date")
+    private LocalDate birthDate;
 
     private String requestedFullName;
     private LocalDateTime submittedAt;

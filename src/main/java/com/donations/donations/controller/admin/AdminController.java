@@ -112,8 +112,12 @@ public class AdminController {
     public ResponseEntity<com.donations.donations.dto.PageResponse<WalletTransactionResponseDto>> getWalletTransactions(
             @RequestParam(required = false) UUID creatorId,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String type,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) String period
     ) {
-        return ResponseEntity.ok(walletService.getAllTransactionsPaged(creatorId, page, size));
+        return ResponseEntity.ok(walletService.getAllTransactionsPaged(creatorId, page, size, type, category, search, period));
     }
 }
