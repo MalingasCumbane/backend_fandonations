@@ -126,8 +126,8 @@ public class PublicDataController {
                             .map(d -> (d.getSupporterEmail() != null && !d.getSupporterEmail().isBlank())
                                     ? d.getSupporterEmail().trim().toLowerCase()
                                     : ((d.getSupporterName() != null && !d.getSupporterName().isBlank())
-                                            ? d.getSupporterName().trim().toLowerCase()
-                                            : d.getId().toString()))
+                                    ? d.getSupporterName().trim().toLowerCase()
+                                    : d.getId().toString()))
                             .distinct()
                             .count();
 
@@ -161,8 +161,8 @@ public class PublicDataController {
                 .map(d -> (d.getSupporterEmail() != null && !d.getSupporterEmail().isBlank())
                         ? d.getSupporterEmail().trim().toLowerCase()
                         : ((d.getSupporterName() != null && !d.getSupporterName().isBlank())
-                                ? d.getSupporterName().trim().toLowerCase()
-                                : d.getId().toString()))
+                        ? d.getSupporterName().trim().toLowerCase()
+                        : d.getId().toString()))
                 .distinct()
                 .count();
 
@@ -205,7 +205,6 @@ public class PublicDataController {
     public List<Category> getCategories() {
         return categoryRepository.findAll();
     }
-
 
     @PostMapping("/donations")
     @ResponseStatus(HttpStatus.CREATED)
